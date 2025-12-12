@@ -1,0 +1,616 @@
+/* Importar Bootstrap (assumindo que o projeto original usava) */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Estilos globais para a aplicação */
+html,
+body {
+  height: 100%;
+}
+
+:root {
+  /* Altura aproximada do footer (p/ cálculos de layout) */
+  --footer-h: 64px;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Centered card helpers for auth and forms */
+.centered-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* Default site background for non-home pages */
+body:not(.home-hero) {
+  /* Use a darker neutral for better card contrast */
+  --bs-body-bg: #dee2e6; /* Bootstrap gray-300 */
+  background-color: var(--bs-body-bg) !important;
+}
+
+main {
+  flex-grow: 1;
+}
+
+/* ------------------------------
+/* Modern campgrounds header */
+.campgrounds-header {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 2rem !important;
+}
+
+.campgrounds-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #212529;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.campgrounds-subtitle {
+  font-size: 1rem;
+  color: #6c757d;
+  font-weight: 400;
+}
+
+.btn-add-campground {
+  padding: 0.625rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(25, 135, 84, 0.15);
+  white-space: nowrap;
+}
+
+.btn-add-campground:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(25, 135, 84, 0.25);
+}
+
+.btn-add-campground:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .campgrounds-header {
+    padding: 1rem 0;
+  }
+
+  .campgrounds-title {
+    font-size: 1.5rem;
+  }
+
+  .campgrounds-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .btn-add-campground {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Modern pagination styling */
+.pagination-modern {
+  gap: 0.25rem;
+}
+
+.pagination-modern .page-link {
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  padding: 0.5rem 0.75rem;
+  min-width: 40px;
+  text-align: center;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.pagination-modern .page-link:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+  color: #212529;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.pagination-modern .page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+}
+
+.pagination-modern .page-item.disabled .page-link {
+  color: #adb5bd;
+  cursor: not-allowed;
+  background-color: transparent;
+}
+
+.pagination-modern .page-link:focus {
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  z-index: 3;
+}
+
+/* Mobile pagination styling */
+.mobile-pager-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #dee2e6;
+  padding: 0.75rem 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.btn-pager {
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  background-color: white;
+  color: #495057;
+  padding: 0.5rem 1rem;
+  min-width: 50px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-pager:hover:not(:disabled) {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+  transform: scale(1.05);
+}
+
+.btn-pager:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mobile-page-info {
+  font-weight: 600;
+  color: #495057;
+  font-size: 1rem;
+}
+
+/* Camp card styles */
+body.camp-scroll main.container {
+  /* Remover o offset padrão e controlar altura manualmente */
+  margin-top: 0 !important;
+  padding-top: 1rem;
+  height: calc(100vh - 56px - var(--footer-h)); /* fallback */
+  height: calc(
+    100dvh - 56px - var(--footer-h)
+  ); /* usar dvh em navegadores modernos/mobile */
+  overflow: hidden; /* evita scroll da página, só do conteúdo interno */
+  /* Melhorar comportamento em iOS */
+  position: relative;
+  touch-action: pan-y; /* permitir apenas scroll vertical */
+}
+
+body.camp-scroll .footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000; /* abaixo de overlays/modais e do pager móvel */
+}
+
+.camp-scroll-inner {
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: calc(
+    var(--footer-h) + 1rem
+  ); /* espaço para não ficar atrás do footer */
+  /* Melhorias para scroll em iOS */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  /* Evitar problemas de scroll em mobile Safari */
+  position: relative;
+  will-change: scroll-position;
+}
+
+/* Mais espaço em mobile para facilitar scroll e não ser coberto pelo pager fixo */
+@media (max-width: 767px) {
+  .camp-scroll-inner {
+    padding-bottom: calc(
+      var(--footer-h) + 60px
+    ); /* espaço para pager fixo (50px altura aprox) */
+  }
+}
+
+/* Estilo para a página inicial (Home.jsx) */
+.cover-container {
+  height: 100vh;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+    url('https://images.unsplash.com/photo-1559521783-1d1599583485?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80');
+  background-size: cover;
+  background-position: center;
+  text-shadow: 0 0.05rem 0.1rem rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 0 5rem rgba(0, 0, 0, 0.5);
+  padding: 0;
+  margin: -5rem -15px 0 -15px; /* Ajuste para cobrir a área da main */
+}
+
+.cover-inner {
+  max-width: 60vw;
+}
+
+.btn-secondary,
+.btn-secondary:hover {
+  color: #333;
+  text-shadow: none; /* Prevent inheritance from `body` */
+}
+
+/* Carousel thumbnails polish */
+.carousel-thumbs img {
+  border-radius: 6px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease,
+    outline-color 0.15s ease;
+}
+
+.carousel-thumbs button[aria-current='true'] img {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+  transform: translateY(-1px);
+}
+
+/* Hover/focus effects for thumbnails */
+.carousel-thumbs button:hover img,
+.carousel-thumbs button:focus img {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
+}
+
+.carousel-thumbs button:hover,
+.carousel-thumbs button:focus {
+  opacity: 1 !important;
+}
+
+/* Consistent main carousel image aspect */
+.carousel-main-img {
+  height: 420px;
+  object-fit: cover;
+}
+
+@media (max-width: 576px) {
+  .carousel-main-img {
+    height: 260px;
+  }
+}
+
+/* Gradient overlay for carousel images */
+.carousel-item {
+  position: relative;
+}
+
+.carousel-gradient-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 45%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.carousel .carousel-caption {
+  z-index: 2;
+}
+
+/* Smooth thumbnail active animation */
+.carousel-thumbs button {
+  transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.carousel-thumbs button[aria-current='true'] img {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Sticky map on md+ screens */
+.sticky-md {
+  position: static;
+}
+
+@media (min-width: 768px) {
+  .sticky-md {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+/* Carousel indicators polish */
+.carousel .carousel-indicators [data-bs-target] {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(var(--bs-primary-rgb), 0.5);
+}
+
+.carousel .carousel-indicators .active {
+  background-color: rgba(var(--bs-primary-rgb), 1);
+}
+
+/* Hide indicators on small screens when thumbnails exist */
+@media (max-width: 576px) {
+  .carousel.has-thumbs .carousel-indicators {
+    display: none;
+  }
+}
+
+/* Always hide indicators when thumbnails exist (desktop too) */
+.carousel.has-thumbs .carousel-indicators {
+  display: none;
+}
+
+/* Mobile pager: fixo na parte inferior, acima do footer */
+.mobile-pager-fixed {
+  position: fixed;
+  bottom: var(--footer-h);
+  left: 0;
+  right: 0;
+  z-index: 1020;
+  background-color: rgba(248, 249, 250, 0.98);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 0;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  /* Evitar que interfira com scroll em iOS */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Campgrounds index card polish */
+.camp-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  /* Melhorar performance de toque em mobile */
+  touch-action: manipulation;
+  height: 200px; /* FIXED height for all cards */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Hide overflow to maintain fixed height */
+}
+
+.camp-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.camp-card-img {
+  width: 100%;
+  height: 100%; /* Fill the entire image column */
+  min-height: 200px; /* Ensure minimum height matches card */
+  object-fit: cover; /* Crop image to fit while maintaining aspect ratio */
+  object-position: center; /* Center the cropped area */
+  display: block; /* Remove any inline spacing */
+}
+
+/* Ensure row fills the card height */
+.camp-card > .row {
+  flex: 1;
+  margin: 0;
+  height: 200px;
+}
+
+.camp-card .col-md-4 {
+  padding: 0; /* Remove padding so image fills completely */
+  height: 200px;
+  overflow: hidden;
+}
+
+.camp-card .col-md-8 {
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  overflow: hidden; /* Prevent content from expanding card */
+}
+
+.camp-card .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.camp-card .card-body .card-title {
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* Limit title to 1 line */
+  -webkit-box-orient: vertical;
+  font-size: 1.1rem;
+}
+
+.camp-card .card-body .card-text {
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+.camp-card .card-body .card-text:last-child {
+  margin-top: auto; /* Push timestamp to bottom */
+  margin-bottom: 0;
+}
+
+/* Campgrounds list page background (subtle gray so cards stand out) */
+body.camp-list-bg {
+  /* Override Bootstrap body background via CSS variable and property */
+  --bs-body-bg: #dee2e6; /* match non-home darker bg */
+  background-color: var(--bs-body-bg) !important;
+}
+
+/* Ensure main container remains transparent so body bg is visible */
+body.camp-list-bg main.container {
+  background: transparent;
+}
+
+/* Map card styling to match campground cards */
+.map-card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
+}
+
+/* Original homepage body-wide hero styling (applied via Home.jsx) */
+body.home-hero {
+  overflow: hidden;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+    url('https://images.unsplash.com/photo-1559521783-1d1599583485?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  text-shadow: 0 0.05rem 0.1rem rgba(0, 0, 0, 0.5);
+}
+
+/* When on home hero, make the cover container transparent and remove offsets */
+body.home-hero .cover-container {
+  height: calc(100vh - 56px); /* viewport minus navbar only */
+  background: none;
+  margin: 0;
+  box-shadow: none !important;
+  position: relative;
+}
+
+/* Ensure CTA never sits under the floating footer on small screens */
+@media (max-width: 576px) {
+  .home-hero-content {
+    padding-bottom: calc(
+      90px + env(safe-area-inset-bottom)
+    ); /* space for fixed footer chip + breathing room */
+  }
+  .home-cta-btn {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+  }
+  .home-hero-footer {
+    bottom: calc(
+      0.5rem + env(safe-area-inset-bottom)
+    ); /* slightly lower to free CTA area */
+  }
+}
+
+/* Remove default top spacing from Layout's main container only on home */
+body.home-hero main.container {
+  margin-top: 0;
+  padding: 0;
+  max-width: 100%;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+}
+
+/* Hide the Layout footer on home page (we use inline footer) */
+body.home-hero .footer {
+  display: none;
+}
+
+/* Home page inline footer positioned at bottom of hero */
+.home-hero-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  text-align: center;
+  z-index: 1030; /* above content, below modals */
+  pointer-events: none; /* don't block clicks */
+}
+
+.home-hero-footer p {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  pointer-events: auto; /* allow link clicks if any in future */
+}
+
+/* Home-specific navbar link styles to mimic original */
+body.home-hero .nav-link {
+  padding: 0.25rem 0;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  margin-left: 1rem;
+  border-bottom: 0.25rem solid transparent;
+}
+
+body.home-hero .nav-link:hover {
+  color: rgba(255, 255, 255, 0.75);
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+body.home-hero .nav-link.active {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+/* ------------------------------
+   Forms: improve contrast & focus
+------------------------------- */
+.validated-form .form-label {
+  font-weight: 600;
+}
+
+.validated-form .form-control,
+.validated-form .form-select,
+.validated-form textarea {
+  background-color: #fff; /* ensure white surface inside gray pages */
+  border-color: #a6b2bd; /* slightly darker than default for contrast */
+}
+
+.validated-form .input-group-text {
+  background-color: #f8f9fa;
+  border-color: #a6b2bd;
+  color: #495057;
+}
+
+.validated-form .form-control::placeholder,
+.validated-form textarea::placeholder {
+  color: #6c757d;
+  opacity: 0.75;
+}
+
+.validated-form .form-control:focus,
+.validated-form .form-select:focus,
+.validated-form textarea:focus {
+  background-color: #fff;
+  border-color: #0d6efd; /* bootstrap primary */
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+/* ------------------------------
+   Loading Skeletons
+------------------------------- */
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.skeleton-img {
+  width: 100%;
+  display: block;
+}
