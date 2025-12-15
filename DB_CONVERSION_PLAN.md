@@ -12,11 +12,41 @@ This document outlines the step-by-step plan to migrate the current project from
 - Identify relationships (one-to-many, many-to-many, embedded documents).
 - Document the current structure and relationships.
 
+
 ## 2. Choose and Set Up Relational Database
 
-- Select PostgreSQL as the target database.
-- Set up PostgreSQL locally or in the cloud.
-- Install required Node.js packages (e.g., `pg`, `prisma`, or `sequelize`).
+### 2.1 Select PostgreSQL as the target database
+- PostgreSQL is chosen for its reliability, features, and strong Node.js support.
+
+### 2.2 Set up PostgreSQL locally
+- Download and install PostgreSQL from https://www.postgresql.org/download/
+- Set a password for the default `postgres` user during installation.
+- Create a database for the project:
+	```sql
+	CREATE DATABASE josepaulocamp;
+	```
+
+### 2.3 Install and initialize Prisma ORM
+- In the project root, run:
+	```sh
+	npm install prisma --save-dev
+	npm install @prisma/client
+	npx prisma init
+	```
+- This creates a `prisma/` folder and `.env` file.
+
+### 2.4 Configure database connection
+- Edit `.env` and set:
+	```env
+	DATABASE_URL="postgresql://postgres:<your_password>@localhost:5432/josepaulocamp"
+	```
+
+### 2.5 Next steps
+- Proceed to schema design and migration.
+
+---
+
+**Commit:** chore: set up PostgreSQL and Prisma ORM
 
 ## 3. Design Relational Schema
 
