@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-import { cloudinary } from '../cloudinary/index.js';
-import mbxGeocoding from '@mapbox/mapbox-sdk/services/geocoding';
+const { cloudinary } = require('../cloudinary/index.js');
+const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 
 const mapBoxToken = process.env.MAPBOX_TOKEN;
 const geocoder = mapBoxToken
@@ -9,7 +9,7 @@ const geocoder = mapBoxToken
   : null;
 
 // List campgrounds with pagination
-export async function index(req, res) {
+async function index(req, res) {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
   const limitRaw = parseInt(req.query.limit, 10);
   const limit = Math.min(50, Math.max(1, isNaN(limitRaw) ? 12 : limitRaw));
@@ -37,7 +37,7 @@ export async function index(req, res) {
 }
 
 // Create new campground
-export async function createCampground(req, res) {
+async function createCampground(req, res) {
   let geometry = req.body.campground.geometry;
   if (geocoder && !geometry) {
     const geoData = await geocoder
@@ -66,7 +66,7 @@ export async function createCampground(req, res) {
 }
 
 // Show campground by id
-export async function showCampground(req, res) {
+async function showCampground(req, res) {
   const campground = await prisma.campground.findUnique({
     where: { id: Number(req.params.id) },
     include: {
@@ -84,7 +84,7 @@ export async function showCampground(req, res) {
 }
 
 // Update campground
-export async function updateCampground(req, res) {
+async function updateCampground(req, res) {
   const { id } = req.params;
   const imgs = req.files.map((f) => ({ url: f.path, filename: f.filename }));
   let geometry = req.body.campground.geometry;
@@ -126,7 +126,14 @@ export async function updateCampground(req, res) {
 }
 
 // Delete campground
-export async function deleteCampground(req, res) {
+async function deleteCampground(req, res) {
+  module.exports = {
+    index,
+    createCampground,
+    showCampground,
+    updateCampground,
+    deleteCampground,
+  };
   const { id } = req.params;
   await prisma.campground.delete({ where: { id: Number(id) } });
   res.json({ message: 'O acampamento foi removido com sucesso!' });
