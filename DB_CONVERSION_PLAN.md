@@ -48,12 +48,70 @@ This document outlines the step-by-step plan to migrate the current project from
 
 **Commit:** chore: set up PostgreSQL and Prisma ORM
 
+
 ## 3. Design Relational Schema
 
-- Map each MongoDB collection to a SQL table.
-- Define primary keys, foreign keys, and indexes.
-- Normalize data: move embedded documents to related tables.
-- Document the new schema.
+### 3.1 Map MongoDB collections to SQL tables
+- User → User
+- Campground → Campground
+- Review → Review
+- Images (embedded) → Image (separate table)
+
+### 3.2 Define schema (Prisma)
+```prisma
+model User {
+	id        Int       @id @default(autoincrement())
+	email     String    @unique
+	username  String    @unique
+	password  String
+	campgrounds Campground[] @relation("UserCampgrounds")
+	reviews   Review[]
+}
+
+model Campground {
+	id          Int       @id @default(autoincrement())
+	title       String
+	description String
+	price       Float
+	location    String
+	authorId    Int
+	author      User      @relation("UserCampgrounds", fields: [authorId], references: [id])
+	reviews     Review[]
+	images      Image[]
+	geometry    Json
+	createdAt   DateTime  @default(now())
+	updatedAt   DateTime  @updatedAt
+}
+
+model Review {
+	id        Int      @id @default(autoincrement())
+	body      String
+	rating    Int
+	authorId  Int
+	campgroundId Int
+	author    User     @relation(fields: [authorId], references: [id])
+	campground Campground @relation(fields: [campgroundId], references: [id])
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+}
+
+model Image {
+	id           Int         @id @default(autoincrement())
+	url          String
+	filename     String
+	campgroundId Int
+	campground   Campground  @relation(fields: [campgroundId], references: [id])
+}
+```
+
+### 3.3 Notes
+- Embedded images are now a separate table with a foreign key to Campground.
+- Geometry is stored as JSON.
+- All relationships are enforced with foreign keys.
+
+---
+
+**Commit:** feat: design and document SQL schema
 
 ## 4. Set Up ORM
 

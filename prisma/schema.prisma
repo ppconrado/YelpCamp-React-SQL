@@ -11,4 +11,49 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  username  String    @unique
+  password  String
+  campgrounds Campground[] @relation("UserCampgrounds")
+  reviews   Review[]
+}
+
+model Campground {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  price       Float
+  location    String
+  authorId    Int
+  author      User      @relation("UserCampgrounds", fields: [authorId], references: [id])
+  reviews     Review[]
+  images      Image[]
+  geometry    Json
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  body      String
+  rating    Int
+  authorId  Int
+  campgroundId Int
+  author    User     @relation(fields: [authorId], references: [id])
+  campground Campground @relation(fields: [campgroundId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Image {
+  id           Int         @id @default(autoincrement())
+  url          String
+  filename     String
+  campgroundId Int
+  campground   Campground  @relation(fields: [campgroundId], references: [id])
 }
