@@ -52,6 +52,14 @@ This document tracks the step-by-step refactor from MongoDB/Mongoose to Prisma/P
 
 **Next:** Update routes to use the new Prisma-based Campground controller, then test endpoints.
 
+## 2025-12-15: Campground Routes Refactor
+
+- Updated `routes/campgrounds.js` to use the new Prisma-based controller (`controllers/campgrounds.prisma.js`).
+- All Campground CRUD operations now handled via Prisma/PostgreSQL.
+- Mongoose model/controller is no longer used for campgrounds.
+
+**Next:** Test the new endpoints and proceed to refactor the Review model/controller.
+
 ---
 
 _Last updated: 2025-12-15_

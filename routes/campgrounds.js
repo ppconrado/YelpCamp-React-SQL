@@ -1,20 +1,20 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router(); // criacao do Router objetp
-const campgrounds = require("../controllers/campgrounds");
-const catchAsync = require("../utils/catchAsync");
-const { isLoggedIn, isAuthor, validateCampground } = require("../middleware");
-const multer = require("multer");
-const { storage } = require("../cloudinary");
+const campgrounds = require('../controllers/campgrounds.prisma.js');
+const catchAsync = require('../utils/catchAsync');
+const { isLoggedIn, isAuthor, validateCampground } = require('../middleware');
+const multer = require('multer');
+const { storage } = require('../cloudinary');
 const upload = multer({ storage });
-const Campground = require("../models/campground");
+const Campground = require('../models/campground');
 
 // 1 - ROUTE ROOT "/campgrounds/" - GET listagem e POST criar acampamento
 router
-  .route("/")
+  .route('/')
   .get(catchAsync(campgrounds.index))
   .post(
     isLoggedIn,
-    upload.array("image"),
+    upload.array('image'),
     validateCampground,
     catchAsync(campgrounds.createCampground)
   );
@@ -24,12 +24,12 @@ router
 
 // 3 - ROUTE "/campgrounds/:id"  - GET, PUT e DELETE
 router
-  .route("/:id")
+  .route('/:id')
   .get(catchAsync(campgrounds.showCampground))
   .put(
     isLoggedIn,
     isAuthor,
-    upload.array("image"),
+    upload.array('image'),
     validateCampground,
     catchAsync(campgrounds.updateCampground)
   )
