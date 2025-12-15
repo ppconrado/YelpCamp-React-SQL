@@ -1,34 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const passport = require('passport');
-const catchAsync = require('../utils/catchAsync');
-const User = require('../models/user');
-const users = require('../controllers/users');
+const users = require('../controllers/users.prisma');
 
 // 1- ROUTE "/register" - POST - REGISTRAR USUARIO
-router.route('/register').post(catchAsync(users.register));
+router.route('/register').post(users.register);
 
-// 2 - ROUTE "/login - POST  + PASSPORT" - AUTENTICAR USUARIO
-router.route('/login').post((req, res, next) => {
-  passport.authenticate('local', (err, user, info) => {
-    if (err) {
-      return next(err);
-    }
-    if (!user) {
-      // Autenticação falhou - retorna erro JSON
-      return res.status(401).json({
-        error: info?.message || 'Username ou password inválidos.',
-      });
-    }
-    // Autenticação bem-sucedida - faz login
-    req.login(user, (err) => {
-      if (err) {
-        return next(err);
-      }
-      return users.login(req, res);
-    });
-  })(req, res, next);
-});
+// 2 - ROUTE "/login" - POST - AUTENTICAR USUARIO
+router.route('/login').post(users.login);
 
 // 3 - ROUTE "/logout" - GET - SAIR
 router.get('/logout', users.logout);
