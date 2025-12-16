@@ -6,7 +6,6 @@ const { isLoggedIn, isAuthor, validateCampground } = require('../middleware');
 const multer = require('multer');
 const { storage } = require('../cloudinary');
 const upload = multer({ storage });
-const Campground = require('../models/campground');
 
 // 1 - ROUTE ROOT "/campgrounds/" - GET listagem e POST criar acampamento
 router

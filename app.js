@@ -22,10 +22,6 @@ const flash = require('connect-flash'); // banner de mensagens
 const ExpressError = require('./utils/ExpressError');
 
 const methodOverride = require('method-override');
-// USER AUTHENTICATION
-const passport = require('passport');
-const LocalStrategy = require('passport-local'); // username e password - auth
-// const User = require('./models/user'); // REMOVIDO: Usando Prisma com PostgreSQL
 //
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -240,12 +236,7 @@ app.use(
   })
 );
 
-// PASSPORT CONFIGURATION - Autenticacao do usuario
-app.use(passport.initialize());
-app.use(passport.session()); // express session
-// passport.use(new LocalStrategy(User.authenticate())); // REMOVIDO: Mongoose local strategy - implementar com Prisma
-// passport.serializeUser(User.serializeUser()); // REMOVIDO: mongoose - storage a session
-// passport.deserializeUser(User.deserializeUser()); // REMOVIDO: mongoose - unstorage session
+app.use(flash()); // FLASH - mensagem de sucesso/erro
 
 // FLASH Message Service ->  partials/flash.ejs - AVISOS
 app.use((req, res, next) => {
