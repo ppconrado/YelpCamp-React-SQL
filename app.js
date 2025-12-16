@@ -174,8 +174,7 @@ app.use(async (req, res, next) => {
   console.log('Session middleware - userId:', req.session.userId);
   if (req.session.userId) {
     try {
-      const { PrismaClient } = require('./generated/prisma');
-      const prisma = new PrismaClient();
+      const prisma = require('./lib/prisma');
       const user = await prisma.user.findUnique({
         where: { id: req.session.userId },
         select: { id: true, username: true, email: true },

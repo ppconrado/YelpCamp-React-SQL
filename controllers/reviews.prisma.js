@@ -1,5 +1,4 @@
-const { PrismaClient } = require('../generated/prisma');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 // Create a new review
 async function createReview(req, res) {

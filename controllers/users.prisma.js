@@ -1,7 +1,5 @@
-const { PrismaClient } = require('../generated/prisma');
+const prisma = require('../lib/prisma');
 const bcrypt = require('bcrypt');
-
-const prisma = new PrismaClient();
 
 // Helper: Strong password validation
 function validatePassword(password) {

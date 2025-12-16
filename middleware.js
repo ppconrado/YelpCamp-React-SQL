@@ -26,8 +26,7 @@ module.exports.validateCampground = (req, res, next) => {
 
 // MIDDLEWARE - PERMISSAO PARA O AUTOR DO ACAMPAMNETO EDITAR
 module.exports.isAuthor = async (req, res, next) => {
-  const { PrismaClient } = require('./generated/prisma');
-  const prisma = new PrismaClient();
+  const prisma = require('./lib/prisma');
   const { id } = req.params;
   const campground = await prisma.campground.findUnique({
     where: { id: Number(id) },
@@ -43,8 +42,7 @@ module.exports.isAuthor = async (req, res, next) => {
 
 // MIDDLEWARE - PERMISSAO PARA O AUTOR DAS AVALIACOES EDITAR
 module.exports.isReviewAuthor = async (req, res, next) => {
-  const { PrismaClient } = require('./generated/prisma');
-  const prisma = new PrismaClient();
+  const prisma = require('./lib/prisma');
   const { id, reviewId } = req.params;
   const review = await prisma.review.findUnique({
     where: { id: Number(reviewId) },
