@@ -31,11 +31,14 @@ const campgroundRoutes = require('./routes/campgrounds');
 const reviewRoutes = require('./routes/reviews');
 const adminRoutes = require('./routes/admin');
 
-// CONEXAO PARA SALVAR UMA EXPRESS SESSION NO MongoDB (MERN)
-// const MongoDBStore = require('connect-mongo')(session); // REMOVIDO: Usando PostgreSQL
+// CONEXAO PARA SALVAR UMA EXPRESS SESSION NO PostgreSQL
+const pgSession = require('connect-pg-simple')(session);
+const { Pool } = require('pg');
 
-// BANCO DE DADOS (dev e prod)
-// const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp'; // REMOVIDO: Usando PostgreSQL
+// Pool de conexões PostgreSQL para sessions
+const pgPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 // CONECTANDO MONGOOSE
 // mongoose.connect(dbUrl); // REMOVIDO: Usando Prisma com PostgreSQL
@@ -130,24 +133,25 @@ app.use(
 // COOKIE dev e prod
 const secret =
   process.env.SECRET || 'Cuidado com a exposicao da senha de acesso!';
-// MONGODB EXPRESS SESSION
-// const store = new MongoDBStore({ // REMOVIDO: Usando PostgreSQL
-//   url: dbUrl,
-//   secret, // cookie
-//   touchAfter: 24 * 60 * 60, // lazy store
-// });
 
-// MONGO EXPRESS SESSION - CONFIGURACAO
-// store.on('error', function (e) {
-//   console.log('ERRO NO ARMAZENAMENTO DA SESSION no DB', e);
-// });
+// POSTGRESQL EXPRESS SESSION STORE
+const store = new pgSession({
+  pool: pgPool,
+  tableName: 'session', // Nome da tabela onde as sessões serão salvas
+  createTableIfMissing: true, // Cria a tabela automaticamente se não existir
+});
+
+// POSTGRESQL EXPRESS SESSION - CONFIGURACAO
+store.on('error', function (e) {
+  console.log('ERRO NO ARMAZENAMENTO DA SESSION no DB', e);
+});
 
 const sessionConfig = {
-  // store, // REMOVIDO: Usando sessão em memória temporariamente
+  store, // Usando PostgreSQL session store
   name: 'yelpcamp.sid', // Nome mais específico para o cookie
   secret,
   resave: false,
-  saveUninitialized: true, // Precisa ser true para criar sessão no login
+  saveUninitialized: false, // Changed to false - only save sessions when modified (after login)
   proxy: process.env.NODE_ENV === 'production', // Trust proxy in production (Render)
   // cookie
   cookie: {
@@ -166,8 +170,11 @@ app.use(flash());
 
 // Middleware to load user from session (replaces Passport deserialization)
 app.use(async (req, res, next) => {
-  console.log('Session middleware - sessionID:', req.sessionID);
-  console.log('Session middleware - userId:', req.session.userId);
+  console.log('📨 Request:', req.method, req.path);
+  console.log('🍪 Cookies received:', req.headers.cookie);
+  console.log('🔑 SessionID:', req.sessionID);
+  console.log('👤 Session userId:', req.session.userId);
+
   if (req.session.userId) {
     try {
       const prisma = require('./lib/prisma');
@@ -177,10 +184,10 @@ app.use(async (req, res, next) => {
       });
       if (user) {
         req.user = user;
-        console.log('User loaded from session:', user.username);
+        console.log('✅ User loaded from session:', user.username);
       }
     } catch (err) {
-      console.error('Error loading user from session:', err);
+      console.error('❌ Error loading user from session:', err);
     }
   }
   next();
