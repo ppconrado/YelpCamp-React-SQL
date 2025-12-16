@@ -87,6 +87,13 @@ const authLimiter = rateLimit({
 // CONFIGURAÇÃO DO REACT E CORS
 const allowedOrigins = [
   'http://localhost:5173', // Dev local
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:5176',
+  'http://localhost:5177',
+  'http://localhost:5178',
+  'http://localhost:5179',
+  'http://localhost:5180', // Vite pode usar qualquer porta disponível
   process.env.FRONTEND_URL, // Produção (Vercel)
 ].filter(Boolean); // Remove undefined se FRONTEND_URL não estiver definida
 
