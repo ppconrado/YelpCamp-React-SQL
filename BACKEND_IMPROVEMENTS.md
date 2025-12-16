@@ -88,7 +88,11 @@
 ### 11. Cross‑Domain Sessions and Cookies
 
 - Session cookie named (`yelpcamp.sid`), `httpOnly`, `SameSite=None`, `Secure` in production
-- Sessions stored in PostgreSQL via connect-pg-simple
+- **Sessions stored in PostgreSQL** via `connect-pg-simple`
+  - Automatic session table creation (`createTableIfMissing: true`)
+  - Survives container restarts and backend crashes
+  - Persistent across deploys (no session loss)
+  - Uses PostgreSQL connection pool for performance
 - `app.set('trust proxy', 1)` in production for `Secure` cookies behind proxy
 - `session` with `proxy: true` in production
 - CORS with `credentials: true` and `exposedHeaders: ["Set-Cookie"]` to allow cross-domain cookies
@@ -157,7 +161,8 @@ PORT=3000
 ✅ SQL injection prevention (Prisma parameterized queries)
 ✅ Helmet with CSP configured
 ✅ HttpOnly cookies
-✅ Sessions stored in PostgreSQL (not memory)
+✅ **Sessions stored in PostgreSQL** (not memory) via `connect-pg-simple`
+✅ Session persistence across restarts
 ✅ Restrictive CORS
 
 ---

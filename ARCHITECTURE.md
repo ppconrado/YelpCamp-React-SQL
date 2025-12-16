@@ -100,7 +100,7 @@ JosePauloCamp is a full-stack campground review platform built as a Single Page 
 │  │                     │    │ │  │ │  │  - Maps GL JS    │  │
 │  └─────────────────────┘    │ │  │ │  └──────────────────┘  │
 │                              │ │  │ └────────────────────────┘
-│  Cloud: MongoDB Atlas        │ │  │
+│  Cloud: PostgreSQL (Neon)    │ │  │
 └──────────────────────────────┘ │  │
                                  │  │
                                  └──┘

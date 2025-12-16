@@ -88,6 +88,7 @@ JosePauloCamp is a full-featured campground review application where users can d
 - **Multer** - File uploads
 - **Joi** - Schema validation
 - **express-session** - Session management
+- **connect-pg-simple** - PostgreSQL session store
 - **@prisma/adapter-pg** - Prisma database adapter
 - **Helmet** - Security headers
 - **CORS** - Cross-origin configuration
@@ -461,6 +462,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 ## 🔐 Security Features
 
 - ✅ **Session-based authentication** (more secure than JWT for web apps)
+- ✅ **PostgreSQL session persistence** (survives container restarts)
 - ✅ **HttpOnly cookies** (prevents XSS attacks)
 - ✅ **HTTPS-only cookies** in production
 - ✅ **Cross-domain cookie support** (SameSite=None)
@@ -561,9 +563,11 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 # 401 Unauthorized after login
 ```
 
+- Sessions are stored in PostgreSQL via `connect-pg-simple` (survives restarts)
 - In production: Verify `FRONTEND_URL` has no trailing slash
 - Check cookie settings: `secure: true` requires HTTPS
 - Verify `trust proxy` is set in production
+- Session table auto-created on first use
 
 **6. Render backend slow on first request**
 
