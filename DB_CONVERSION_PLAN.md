@@ -38,33 +38,66 @@ This document outlines the step-by-step plan to migrate the current project from
 - Belongs to one campground
 - Previously embedded in Campground, now normalized
 
-### 1.2 Relationship Mapping
+### 1.2 Relationship Mapping (ERD - Crow's Foot Notation)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    RELATIONSHIP DIAGRAM                      │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                  ENTITY RELATIONSHIP DIAGRAM                         │
+└──────────────────────────────────────────────────────────────────────┘
 
-       User (1)
-         │
-         ├──────────────────┐
-         │                  │
-         │ authorId         │ authorId
-         │ (Foreign Key)    │ (Foreign Key)
-         │                  │
-         ▼                  ▼
-    Campground (N)      Review (N)
-         │                  │
-         │ campgroundId     │ campgroundId
-         │ (Foreign Key)    │ (Foreign Key)
-         │                  │
-         ├──────────────────┘
-         │
-         │ campgroundId
-         │ (Foreign Key)
-         │
-         ▼
-     Image (N)
+                    ┌─────────────────────┐
+                    │       USER          │
+                    ├─────────────────────┤
+                    │ PK  id              │
+                    │     username (UQ)   │
+                    │     email (UQ)      │
+                    │     password        │
+                    └─────────────────────┘
+                           │     │
+                           │     │
+                        1  │     │ 1
+           ┌───────────────┘     └────────────────┐
+           │ creates                          writes│
+           │                                        │
+         ╔═╩═══════════════╗              ╔════════╩═════════╗
+       N ║                 ║            N ║                  ║
+         ║   CAMPGROUND    ║◄─────────────║     REVIEW       ║
+         ║                 ║    about     ║                  ║
+         ║─────────────────║       1:N    ║──────────────────║
+         ║ PK  id          ║              ║ PK  id           ║
+         ║     title       ║              ║     body         ║
+         ║     description ║              ║     rating       ║
+         ║     price       ║              ║ FK  campgroundId─║──┐
+         ║     location    ║              ║ FK  authorId     ║  │
+         ║     geometry    ║              ╚══════════════════╝  │
+         ║ FK  authorId    ║                                     │
+         ╚═════════════════╝                                     │
+                 │                                               │
+                 │ 1                                             │
+                 │                                               │
+                 │ contains                                      │
+                 │                                               │
+              ╔══╩══════════════╗                                │
+            N ║                 ║                                │
+              ║     IMAGE       ║                                │
+              ║─────────────────║                                │
+              ║ PK  id          ║                                │
+              ║     url         ║                                │
+              ║     filename    ║                                │
+              ║ FK  campgroundId║────────────────────────────────┘
+              ╚═════════════════╝
+
+
+CARDINALITY NOTATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ═══     Entity (strong/independent)
+  ─┐│     One (exactly one, mandatory)
+  ─┤│     One (optional)
+  ═╩═     Many (zero or more)
+  ◄──     Relationship direction
+  PK      Primary Key
+  FK      Foreign Key
+  UQ      Unique constraint
 ```
 
 ### 1.3 Relationship Types

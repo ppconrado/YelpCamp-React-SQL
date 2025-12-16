@@ -348,41 +348,94 @@ User requests protected resource
 
 ## Database Schema
 
-### Entity Relationship Diagram
+### Entity Relationship Diagram (ERD)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│              DATABASE ENTITY RELATIONSHIPS                   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ENTITY RELATIONSHIP DIAGRAM                              │
+│                      (Crow's Foot Notation)                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-            User
-             │
-             │ 1
-             │
-        ┌────┴────┐
-        │         │
-        │ N       │ N
-        │         │
-        ▼         ▼
-   Campground   Review
-        │         │
-        │ 1       │ N
-        │         │
-        │         │
-        │         └──────┐
-        │ N              │ 1
-        │                │
-        ▼                ▼
-      Image         Campground
+    ┌─────────────────────┐
+    │       USER          │
+    ├─────────────────────┤
+    │ PK  id              │
+    │     username        │
+    │     email           │
+    │     password        │
+    │     createdAt       │
+    │     updatedAt       │
+    └─────────────────────┘
+            │       │
+            │       │
+          1 │       │ 1
+            │       │
+            │       └─────────────────┐
+            │                         │
+            │ creates                 │ writes
+            │                         │
+            │                         │
+            ○                         ○
+            │                         │
+          N │                       N │
+            │                         │
+    ┌───────┴──────────┐      ┌───────┴──────────┐
+    │   CAMPGROUND     │      │     REVIEW       │
+    ├──────────────────┤      ├──────────────────┤
+    │ PK  id           │      │ PK  id           │
+    │     title        │      │     body         │
+    │     description  │◄─────┤ FK  campgroundId │
+    │     price        │  1:N │     rating       │
+    │     location     │      │ FK  authorId     │
+    │     geometry     │      │     createdAt    │
+    │ FK  authorId     │      │     updatedAt    │
+    │     createdAt    │      └──────────────────┘
+    │     updatedAt    │              │
+    └──────────────────┘              │
+            │                         │
+            │                         │ about
+          1 │                         │
+            │                       N │
+            ○                         │
+            │                         │
+          N │                         │
+            │                         │
+    ┌───────┴──────────┐              │
+    │      IMAGE       │              │
+    ├──────────────────┤              │
+    │ PK  id           │              │
+    │     url          │              │
+    │     filename     │              │
+    │ FK  campgroundId │──────────────┘
+    └──────────────────┘
 
 
-Relationship Summary:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. User → Campground    (1:N) - authorId FK
-2. User → Review        (1:N) - authorId FK
-3. Campground → Image   (1:N) - campgroundId FK
-4. Campground → Review  (1:N) - campgroundId FK
-5. User ↔ Campground    (M:N) - via Review table
+    ┌──────────────────┐
+    │   SESSION        │
+    ├──────────────────┤
+    │ PK  sid          │
+    │     sess         │
+    │     expire       │
+    └──────────────────┘
+
+
+LEGEND:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PK  = Primary Key
+  FK  = Foreign Key
+  1   = One (mandatory)
+  N   = Many
+  ○   = Optional/Zero
+  │   = Relationship line
+  ◄─  = Direction of relationship
+
+RELATIONSHIP SUMMARY:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. User (1) ──creates──> (N) Campground
+2. User (1) ──writes───> (N) Review
+3. Campground (1) ──has─> (N) Image
+4. Campground (1) ──has─> (N) Review
+5. User (M) ←─Review──> (N) Campground  [Many-to-Many via Review]
 ```
 
 ### Relationship Details
