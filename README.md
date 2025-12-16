@@ -518,7 +518,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 - [ ] Elasticsearch for advanced search
 - [ ] WebSocket for real-time features
 - [ ] GitHub Actions CI/CD pipeline
-- [ ] Docker containerization
+- [x] Docker containerization (see [DOCKER.md](DOCKER.md))
 - [ ] Kubernetes orchestration
 
 ---

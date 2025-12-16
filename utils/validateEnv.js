@@ -1,5 +1,5 @@
 // Validação de variáveis de ambiente obrigatórias
-const requiredEnvVars = ['DB_URL', 'SECRET'];
+const requiredEnvVars = ['DATABASE_URL', 'SECRET'];
 
 function validateEnv() {
   const missing = requiredEnvVars.filter((varName) => !process.env[varName]);
@@ -16,14 +16,6 @@ function validateEnv() {
   }
 
   // Avisos para variáveis opcionais mas recomendadas
-  // Preferir SRV (mongodb+srv) para conexões Atlas para evitar avisos/erros futuros do Node
-  if (process.env.DB_URL && process.env.DB_URL.startsWith('mongodb://')) {
-    console.warn(
-      '⚠️  AVISO: Sua DB_URL usa o esquema mongodb://. Para MongoDB Atlas, prefira mongodb+srv:// (copie em Atlas > Connect > Drivers).\n' +
-        '   Exemplo: mongodb+srv://USUARIO:SENHA@SEU-CLUSTER.mongodb.net/NOME_DB?retryWrites=true&w=majority'
-    );
-  }
-
   if (!process.env.MAPBOX_TOKEN) {
     console.warn(
       '⚠️  AVISO: MAPBOX_TOKEN não configurado. A geocodificação não funcionará.'
