@@ -38,29 +38,30 @@
 - Validated on backend before user creation
 - Clear feedback for unmet requirements
 
-### 6. MongoDB Indexes
+### 6. PostgreSQL Indexes
 
-**Campground Model:**
+**Campground Table:**
 
-- `author`: filter by author ("my campgrounds")
-- `geometry.coordinates`: geospatial queries (proximity)
-- `title, description, location`: full-text search
+- `authorId`: filter by author ("my campgrounds")
+- Foreign key indexes for relationships
+- Composite indexes for common query patterns
 
-**User Model:**
+**User Table:**
 
-- `email`: fast lookup by email
-- `username`: lookup by username (unique by plugin)
+- `email`: fast lookup by email (unique)
+- `username`: lookup by username (unique)
 
-**Review Model:**
+**Review Table:**
 
-- `author`: filter reviews by author
+- `authorId`: filter reviews by author
+- `campgroundId`: filter reviews by campground
 
-**Benefits:** Queries up to 100x faster on large collections
+**Benefits:** Queries up to 100x faster on large tables
 
 ### 7. Graceful Shutdown
 
 - Properly close HTTP server on SIGTERM/SIGINT
-- Close MongoDB connections before exit
+- Close PostgreSQL connections (Prisma) before exit
 - 10-second timeout to force shutdown if needed
 - Important for containerized deploys and zero-downtime updates
 
@@ -87,6 +88,7 @@
 ### 11. Cross‑Domain Sessions and Cookies
 
 - Session cookie named (`yelpcamp.sid`), `httpOnly`, `SameSite=None`, `Secure` in production
+- Sessions stored in PostgreSQL via connect-pg-simple
 - `app.set('trust proxy', 1)` in production for `Secure` cookies behind proxy
 - `session` with `proxy: true` in production
 - CORS with `credentials: true` and `exposedHeaders: ["Set-Cookie"]` to allow cross-domain cookies
@@ -117,7 +119,7 @@ For deployment steps (Render + Vercel), see `DEPLOYMENT.md`.
 Create `.env` at the root:
 
 ```
-DB_URL=mongodb://localhost:27017/yelp-camp
+DATABASE_URL=postgresql://user:password@localhost:5432/yelpcamp
 SECRET=your_strong_secret_here
 FRONTEND_URL=https://your-frontend.vercel.app  # required in production for CORS
 ```
@@ -152,10 +154,10 @@ PORT=3000
 
 ✅ Rate limiting on auth and API
 ✅ Strong passwords enforced
-✅ Data sanitization (mongo-sanitize)
+✅ SQL injection prevention (Prisma parameterized queries)
 ✅ Helmet with CSP configured
 ✅ HttpOnly cookies
-✅ Sessions stored in MongoDB (not memory)
+✅ Sessions stored in PostgreSQL (not memory)
 ✅ Restrictive CORS
 
 ---
@@ -170,17 +172,17 @@ PORT=3000
 6. Tests: Unit (Jest) and E2E (Playwright/Cypress)
 7. CI/CD: GitHub Actions for automatic deployment
 8. Production hygiene: remove `/api/debug/session` in final builds
-9. Upgrades: migrate to newer Mongoose/Helmet/connect-mongo as feasible
+9. TypeScript: migrate to TypeScript for better type safety
 
 ---
 
 ## 📝 Technical Notes
 
-- MongoDB deprecation warnings suppressed via Mongoose options
+- Prisma migrations handle schema changes automatically
 - Passport Local strategy configured for persistent sessions
 - Flash messages available via `req.flash()` for compatibility
-- GeoJSON 2dsphere index enables `$near` and `$geoWithin`
-- Text index supports `{ $text: { $search: "beach camping" } }`
+- PostgreSQL indexes optimize query performance
+- Prisma provides type-safe database queries
 - `Set-Cookie` header exposed via CORS; cookies use `SameSite=None` + `Secure` in production
 - SPA fallback excludes `/api/*` via negative regex to prevent HTML responses on API calls
 

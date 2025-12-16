@@ -82,7 +82,7 @@ JosePauloCamp is a full-featured campground review application where users can d
 
 - **Node.js 18+** - Runtime
 - **Express.js 4** - Web framework
-- **Passport.js** - Authentication
+- **bcrypt** - Password hashing
 - **Prisma 7** - PostgreSQL ORM (Type-safe database client)
 - **PostgreSQL** - Relational database
 - **Multer** - File uploads

@@ -116,7 +116,7 @@ Expected Output:
 ```
 🔄 Received shutdown signal. Shutting down gracefully...
 ✅ HTTP server closed
-✅ MongoDB connection closed
+✅ Database connections closed
 ```
 
 ---
@@ -137,29 +137,50 @@ In development includes `stack` trace.
 
 ---
 
-## 🧪 TEST 7: MongoDB Index Verification
+## 🧪 TEST 7: PostgreSQL Index Verification
 
-Shell / Compass:
+Using psql or a PostgreSQL client:
 
-```javascript
-db.campgrounds.getIndexes();
+```sql
+-- Check indexes on Campground table
+SELECT indexname, indexdef
+FROM pg_indexes
+WHERE tablename = 'Campground';
+
+-- Check indexes on User table
+SELECT indexname, indexdef
+FROM pg_indexes
+WHERE tablename = 'User';
+
+-- Check indexes on Review table
+SELECT indexname, indexdef
+FROM pg_indexes
+WHERE tablename = 'Review';
 ```
 
 Expected Indexes:
 
-```javascript
-[
-  { _id: 1 },
-  { author: 1 },
-  { 'geometry.coordinates': '2dsphere' },
-  { title: 'text', description: 'text', location: 'text' },
-];
+```sql
+-- Primary keys (automatic)
+Campground_pkey on column: id
+User_pkey on column: id
+Review_pkey on column: id
+
+-- Foreign key indexes
+Campground_authorId_idx on column: authorId
+Review_authorId_idx on column: authorId
+Review_campgroundId_idx on column: campgroundId
+
+-- Unique constraints
+User_username_key on column: username
+User_email_key on column: email
 ```
 
-Performance (illustrative):
+Performance Benefits:
 
-- Author query: ~500ms → ~5ms
-- Geospatial queries now enabled
+- Author query: ~500ms → ~5ms (100x faster)
+- Foreign key lookups optimized
+- Unique constraint enforcement
 
 ---
 

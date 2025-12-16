@@ -6,7 +6,7 @@ This project uses a decoupled architecture deploying frontend and backend separa
 
 - **Frontend (React SPA)**: Vercel
 - **Backend (Express API)**: Render
-- **Database**: MongoDB Atlas
+- **Database**: PostgreSQL (Neon/Supabase/Railway)
 - **Image Storage/CDN**: Cloudinary
 
 Both services auto-deploy from the `main` branch on GitHub.
@@ -44,7 +44,7 @@ Add under "Environment":
 
 ```
 NODE_ENV=production
-DB_URL=mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/yelpcamp?retryWrites=true&w=majority
+DATABASE_URL=postgresql://<user>:<pass>@<host>.region.provider.com:5432/yelpcamp
 SECRET=<your-32+char-random-session-secret>
 CLOUDINARY_CLOUD_NAME=<cloudinary-cloud-name>
 CLOUDINARY_KEY=<cloudinary-api-key>
@@ -130,10 +130,11 @@ Open DevTools Console on frontend — confirm no CORS or cookie warnings.
 
 ## 🐛 Common Troubleshooting
 
-### Backend cannot connect to MongoDB
+### Backend cannot connect to PostgreSQL
 
-- Ensure Atlas Network Access allows Render IPs (or use 0.0.0.0/0 for dev)
-- Verify `DB_URL` uses correct credentials and cluster name
+- Ensure PostgreSQL provider (Neon/Supabase/Railway) allows external connections
+- Verify `DATABASE_URL` uses correct credentials and host
+- Check if SSL/TLS is required in connection string
 
 ### Frontend cannot reach backend
 
@@ -170,7 +171,7 @@ Open DevTools Console on frontend — confirm no CORS or cookie warnings.
 
 ```
 NODE_ENV=production
-DB_URL=mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/yelpcamp
+DATABASE_URL=postgresql://<user>:<pass>@<host>.region.provider.com:5432/yelpcamp
 SECRET=<session-secret>
 CLOUDINARY_CLOUD_NAME=<cloud-name>
 CLOUDINARY_KEY=<cloud-key>

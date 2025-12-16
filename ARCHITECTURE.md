@@ -66,11 +66,11 @@ JosePauloCamp is a full-stack campground review platform built as a Single Page 
 │  │  ┌──────────────────────────────────────────────────┐   │    │
 │  │  │  Middleware Stack                                │   │    │
 │  │  │  1. CORS (credentials, dynamic origin)           │   │    │
-│  │  │  2. express-session (MongoDB store)              │   │    │
-│  │  │  3. Passport.js (Local Strategy)                 │   │    │
+│  │  │  2. express-session (PostgreSQL store)           │   │    │
+│  │  │  3. Manual authentication (bcrypt)               │   │    │
 │  │  │  4. Rate Limiting (express-rate-limit)           │   │    │
 │  │  │  5. Helmet (CSP, security headers)               │   │    │
-│  │  │  6. mongo-sanitize (NoSQL injection protection)  │   │    │
+│  │  │  6. Input sanitization (SQL injection prevention)│   │    │
 │  │  └──────────────────────────────────────────────────┘   │    │
 │  │                                                          │    │
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │    │
@@ -125,16 +125,16 @@ JosePauloCamp is a full-stack campground review platform built as a Single Page 
 
 - **Runtime**: Node.js 18+
 - **Framework**: Express.js 4.x
-- **Authentication**: Passport.js (Local Strategy)
-- **Session Store**: connect-mongo
-- **Database ODM**: Mongoose 5.x
+- **Authentication**: Manual bcrypt + express-session
+- **Session Store**: connect-pg-simple
+- **Database ORM**: Prisma 7.x
 - **File Upload**: Multer
 - **Validation**: Joi
-- **Security**: Helmet, CORS, express-rate-limit, express-mongo-sanitize
+- **Security**: Helmet, CORS, express-rate-limit
 
 ### Database & Services
 
-- **Database**: MongoDB Atlas (cloud)
+- **Database**: PostgreSQL (Neon/Supabase/Railway/Local)
 - **Image Storage**: Cloudinary
 - **Maps & Geocoding**: Mapbox API
 
@@ -163,7 +163,7 @@ User Browser
     │
     └─► Load Campgrounds
         └─► GET /api/campgrounds?page=1&limit=12
-            └─► Backend queries MongoDB
+            └─► Backend queries PostgreSQL via Prisma
                 └─► Returns paginated results + metadata
 ```
 
@@ -230,17 +230,17 @@ User enters credentials
     │
     └─► POST /api/login { username, password }
         │
-        ├─► Passport Local Strategy
-        │   ├─► User.findOne({ username })
-        │   ├─► Compare password hash
+        ├─► Manual Authentication
+        │   ├─► Prisma: User.findUnique({ where: { username } })
+        │   ├─► bcrypt.compare(password, user.password)
         │   └─► If valid: return user
         │
-        ├─► req.login(user)
-        │   └─► Passport serializes user._id to session
+        ├─► Set session userId
+        │   └─► req.session.userId = user.id
         │
         ├─► req.session.save()
-        │   └─► MongoDB: store session document
-        │       └─► session_id: { passport: { user: "userId" } }
+        │   └─► PostgreSQL: store session record
+        │       └─► session_id: { userId: <id> }
         │
         └─► Set-Cookie: yelpcamp.sid=<session_id>
             └─► httpOnly: true
@@ -260,16 +260,16 @@ User requests protected resource
         │
         ├─► express-session middleware
         │   ├─► Read session_id from cookie
-        │   ├─► MongoDB: find session document
+        │   ├─► PostgreSQL: find session record
         │   └─► Attach session to req.session
         │
-        ├─► Passport middleware
-        │   ├─► Read req.session.passport.user
-        │   ├─► User.findById(userId)
+        ├─► User loading middleware
+        │   ├─► Read req.session.userId
+        │   ├─► Prisma: User.findUnique({ where: { id: userId } })
         │   └─► Attach user to req.user
         │
         ├─► isLoggedIn middleware
-        │   └─► Check req.isAuthenticated()
+        │   └─► Check req.user exists
         │       └─► If false: return 401
         │
         └─► Controller executes with req.user available
@@ -279,11 +279,11 @@ User requests protected resource
 
 ```javascript
 {
-  store: MongoDBStore,          // Persist sessions in MongoDB
+  store: PostgresStore,          // Persist sessions in PostgreSQL
   name: 'yelpcamp.sid',          // Cookie name
   secret: process.env.SECRET,    // Encryption key
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,      // Don't create session until login
   proxy: true,                   // Trust Render proxy
   cookie: {
     httpOnly: true,              // No JS access
@@ -331,7 +331,7 @@ User requests protected resource
         │       ├─► Apply transformations (resize, optimize)
         │       └─► Return: { url, filename, public_id }
         │
-        └─► Save to MongoDB
+        └─► Save to PostgreSQL via Prisma
             └─► campground.images = [
                   { url: "https://res.cloudinary.com/...",
                     filename: "YelpCamp/abc123" }
@@ -348,76 +348,69 @@ User requests protected resource
 
 ## Database Schema
 
-### Users Collection
+### Prisma Schema (PostgreSQL)
 
-```javascript
-{
-  _id: ObjectId,
-  username: String,     // Unique, indexed
-  email: String,        // Required
-  salt: String,         // Passport-local-mongoose
-  hash: String,         // Password hash
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+```prisma
+model User {
+  id           Int          @id @default(autoincrement())
+  username     String       @unique
+  email        String       @unique
+  password     String       // bcrypt hash
+  campgrounds  Campground[]
+  reviews      Review[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
-### Campgrounds Collection
-
-```javascript
-{
-  _id: ObjectId,
-  title: String,
-  price: Number,
-  description: String,
-  location: String,
-  geometry: {           // GeoJSON Point
-    type: "Point",
-    coordinates: [lng, lat]
-  },
-  images: [{
-    url: String,        // Cloudinary URL
-    filename: String    // Cloudinary public_id
-  }],
-  author: ObjectId,     // ref: 'User'
-  reviews: [ObjectId],  // ref: 'Review'
-  createdAt: Date,
-  updatedAt: Date
+  @@index([email])
+  @@index([username])
 }
 
-// Indexes
-campgrounds.geometry: "2dsphere"  // Geo queries
-campgrounds.author: 1              // Fast author lookup
-```
+model Campground {
+  id          Int      @id @default(autoincrement())
+  title       String
+  price       Float
+  description String
+  location    String
+  geometry    Json     // { type: "Point", coordinates: [lng, lat] }
+  images      Image[]
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    Int
+  reviews     Review[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-### Reviews Collection
-
-```javascript
-{
-  _id: ObjectId,
-  body: String,         // Review text
-  rating: Number,       // 1-5 stars
-  author: ObjectId,     // ref: 'User'
-  createdAt: Date,
-  updatedAt: Date
+  @@index([authorId])
 }
 
-// Indexes
-reviews.author: 1       // Fast author lookup
-```
+model Image {
+  id            Int        @id @default(autoincrement())
+  url           String
+  filename      String
+  campground    Campground @relation(fields: [campgroundId], references: [id], onDelete: Cascade)
+  campgroundId  Int
+}
 
-### Sessions Collection (connect-mongo)
+model Review {
+  id            Int        @id @default(autoincrement())
+  body          String
+  rating        Int        // 1-5
+  author        User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId      Int
+  campground    Campground @relation(fields: [campgroundId], references: [id], onDelete: Cascade)
+  campgroundId  Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-```javascript
-{
-  _id: String,          // session_id
-  expires: Date,        // TTL index
-  session: {
-    cookie: { ... },
-    passport: {
-      user: ObjectId    // User._id
-    }
-  }
+  @@index([authorId])
+  @@index([campgroundId])
+}
+
+model Session {
+  sid    String   @id
+  sess   Json
+  expire DateTime
+
+  @@index([expire])
 }
 ```
 
@@ -479,7 +472,7 @@ GET    /api/debug/session           - Session debug info (development)
 
 ### 1. Authentication & Authorization
 
-- ✅ Secure password hashing (pbkdf2)
+- ✅ Secure password hashing (bcrypt)
 - ✅ Session-based authentication (not JWT for better security)
 - ✅ HttpOnly cookies (XSS protection)
 - ✅ CSRF protection via SameSite cookies
@@ -496,7 +489,7 @@ GET    /api/debug/session           - Session debug info (development)
 
 - ✅ Joi schema validation (backend)
 - ✅ Zod schema validation (frontend)
-- ✅ MongoDB query sanitization (prevents NoSQL injection)
+- ✅ Prisma parameterized queries (prevents SQL injection)
 - ✅ HTML/XSS sanitization
 
 ### 4. HTTP Security Headers (Helmet)
@@ -554,7 +547,7 @@ Strict-Transport-Security: max-age=31536000
 │  │  • Automatic HTTPS                                  │  │
 │  │  • Environment variables:                           │  │
 │  │    - NODE_ENV=production                            │  │
-│  │    - DB_URL (MongoDB Atlas connection string)       │  │
+│  │  │    - DATABASE_URL (PostgreSQL connection string)    │  │
 │  │    - SECRET (session encryption key)                │  │
 │  │    - FRONTEND_URL (Vercel URL for CORS)             │  │
 │  │    - CLOUDINARY_* (image upload credentials)        │  │
@@ -566,8 +559,8 @@ Strict-Transport-Security: max-age=31536000
                 │            │            │
                 ▼            ▼            ▼
          ┌──────────┐  ┌──────────┐  ┌──────────┐
-         │ MongoDB  │  │Cloudinary│  │  Mapbox  │
-         │  Atlas   │  │   CDN    │  │   API    │
+         │PostgreSQL│  │Cloudinary│  │  Mapbox  │
+         │   Neon   │  │   CDN    │  │   API    │
          └──────────┘  └──────────┘  └──────────┘
 ```
 
@@ -618,17 +611,17 @@ Developer pushes to GitHub
 
 ### Backend
 
-- ✅ MongoDB indexes on frequently queried fields
+- ✅ PostgreSQL indexes on frequently queried fields
 - ✅ Pagination (limits query size)
-- ✅ Connection pooling (Mongoose default)
-- ✅ Session store in MongoDB (not memory)
+- ✅ Connection pooling (Prisma default)
+- ✅ Session store in PostgreSQL (not memory)
 - ✅ Cloudinary CDN for images
 
 ### Database
 
-- ✅ Geospatial index (`2dsphere`) for location queries
+- ✅ Indexes on foreign keys and commonly queried columns
 - ✅ Compound indexes for common query patterns
-- ✅ TTL index on sessions (auto-cleanup)
+- ✅ Session expiration handling (auto-cleanup)
 
 ---
 
