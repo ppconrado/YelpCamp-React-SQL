@@ -60,6 +60,45 @@ This document tracks the step-by-step refactor from MongoDB/Mongoose to Prisma/P
 
 **Next:** Test the new endpoints and proceed to refactor the Review model/controller.
 
+## 2025-12-15: Review Model/Controller Refactor
+
+- Created `controllers/reviews.prisma.js` using Prisma Client for review operations.
+- Handles:
+  - Creating reviews with author and campground relations
+  - Deleting reviews
+- Replaced MongoDB array push/pull operations with Prisma's relation management
+- All Review CRUD operations now handled via Prisma/PostgreSQL.
+
+## 2025-12-15: Review Routes Refactor
+
+- Updated `routes/reviews.js` to use the new Prisma-based controller (`controllers/reviews.prisma.js`).
+- All Review operations now use Prisma/PostgreSQL instead of Mongoose.
+
+## 2025-12-15: Admin Controller Refactor
+
+- Created `controllers/admin.prisma.js` for admin operations.
+- Note: The timestamp backfill endpoint is kept for compatibility but is not needed in PostgreSQL/Prisma since timestamps are automatically managed by the schema with `@default(now())` and `@updatedAt`.
+- Updated `routes/admin.js` to use the new Prisma-based controller.
+
+## 2025-12-15: Prisma Configuration Fixes
+
+- Fixed `schema.prisma` generator from `"prisma-client"` to `"prisma-client-js"`
+- Added `url = env("DATABASE_URL")` to datasource block
+- Updated controller imports from `@prisma/client` to `../generated/prisma` (custom output path)
+- Fixed module.exports placement in controllers (was incorrectly placed inside functions)
+- Successfully upgraded from Prisma 4.15.0 to Prisma 7.1.0
+
+## Conversion Status: ✅ COMPLETE
+
+All controllers have been converted to Prisma/PostgreSQL:
+
+- ✅ Users → `users.prisma.js`
+- ✅ Campgrounds → `campgrounds.prisma.js`
+- ✅ Reviews → `reviews.prisma.js`
+- ✅ Admin → `admin.prisma.js`
+
+All routes updated to use Prisma controllers. MongoDB/Mongoose dependencies can now be removed.
+
 ---
 
 _Last updated: 2025-12-15_
