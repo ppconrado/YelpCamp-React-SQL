@@ -257,6 +257,245 @@ CARDINALITY NOTATION:
 
 - Proceed to schema design and migration.
 
+### 2.6 Docker PostgreSQL Considerations
+
+**Important: Docker Creates an Isolated Database Environment**
+
+When deploying with Docker, the PostgreSQL container is a **completely separate database instance** from any previously used database (local PostgreSQL on Windows, cloud providers like Neon/Supabase, etc.).
+
+**Understanding Database Isolation:**
+
+```
+BEFORE DOCKER (Development):
+Your App → External PostgreSQL Database
+          (Local Windows install OR Cloud provider)
+          ✓ Contains all existing data
+
+AFTER DOCKER:
+Docker Container (App) → Docker Container (PostgreSQL)
+                         ✗ Fresh, empty database
+                         ✓ Isolated environment
+
+Your original database still exists with all data intact!
+```
+
+**Three Deployment Options:**
+
+1. **Docker with Fresh Start (Current Implementation)** ✅
+
+   - Docker PostgreSQL starts empty
+   - Data persists in Docker volume: `josepaulocamp_postgres_data`
+   - Best for: Development, testing, clean deployments
+   - Trade-off: Need to re-create data or migrate
+
+2. **Docker Connected to External Database**
+
+   - Point Docker containers to existing database
+   - Modify `DATABASE_URL` in docker-compose.yml to external connection
+   - Best for: Preserving existing data, cloud database usage
+   - Example:
+     ```yaml
+     environment:
+       DATABASE_URL: postgresql://user:pass@external-host.com:5432/yelpcamp
+     ```
+
+3. **Migrate Data to Docker PostgreSQL**
+   - Export data from original database
+   - Import into Docker PostgreSQL container
+   - Best for: Complete Docker isolation with existing data
+   - See detailed migration steps below
+
+**Detailed Data Migration Process:**
+
+If you need to migrate existing data from a previous PostgreSQL database to Docker PostgreSQL:
+
+**Step 1: Export Data from Original Database**
+
+_From Local PostgreSQL (Windows):_
+
+```bash
+# Open PowerShell/Command Prompt
+# Replace <your_password> with your actual password
+pg_dump -U postgres -d yelpcamp -h localhost -p 5432 > backup.sql
+
+# Or set password as environment variable to avoid prompt:
+$env:PGPASSWORD="your_password"
+pg_dump -U postgres -d yelpcamp -h localhost -p 5432 > backup.sql
+```
+
+_From Cloud Database (Neon/Supabase/Railway):_
+
+```bash
+# Get connection string from your cloud provider
+# Example for Neon:
+pg_dump "postgresql://user:password@host.region.neon.tech:5432/yelpcamp?sslmode=require" > backup.sql
+
+# Or use separate parameters:
+pg_dump -h host.region.neon.tech -U username -d yelpcamp -p 5432 > backup.sql
+# (will prompt for password)
+```
+
+**Step 2: Verify Backup File**
+
+```bash
+# Check backup file was created and has content
+ls -l backup.sql      # Linux/Mac
+dir backup.sql        # Windows
+
+# Should show file size > 0 bytes
+# Optionally inspect first few lines:
+head -n 20 backup.sql  # Linux/Mac
+Get-Content backup.sql -Head 20  # PowerShell
+```
+
+**Step 3: Ensure Docker PostgreSQL is Running**
+
+```bash
+# Start Docker containers if not running
+docker compose up -d
+
+# Verify database container is healthy
+docker compose ps
+
+# Should show josepaulocamp-db as "Up (healthy)"
+```
+
+**Step 4: Copy Backup to Docker Container**
+
+```bash
+# Copy backup.sql file into the container
+docker cp backup.sql josepaulocamp-db:/tmp/backup.sql
+
+# Verify copy succeeded
+docker exec josepaulocamp-db ls -lh /tmp/backup.sql
+```
+
+**Step 5: Import Data into Docker PostgreSQL**
+
+```bash
+# Drop existing tables (if any) to avoid conflicts
+docker exec josepaulocamp-db psql -U yelpcamp -d yelpcamp -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+# Import the backup
+docker exec -i josepaulocamp-db psql -U yelpcamp -d yelpcamp < backup.sql
+
+# Alternative: Import from inside container
+docker exec josepaulocamp-db psql -U yelpcamp -d yelpcamp -f /tmp/backup.sql
+```
+
+**Step 6: Verify Migration**
+
+```bash
+# Check tables were created
+docker exec josepaulocamp-db psql -U yelpcamp -d yelpcamp -c "\dt"
+
+# Check row counts
+docker exec josepaulocamp-db psql -U yelpcamp -d yelpcamp -c "
+SELECT
+  'User' as table, COUNT(*) as count FROM \"User\"
+UNION ALL
+SELECT 'Campground', COUNT(*) FROM \"Campground\"
+UNION ALL
+SELECT 'Review', COUNT(*) FROM \"Review\"
+UNION ALL
+SELECT 'Image', COUNT(*) FROM \"Image\";
+"
+
+# Sample a few records
+docker exec josepaulocamp-db psql -U yelpcamp -d yelpcamp -c "SELECT id, username, email FROM \"User\" LIMIT 5;"
+```
+
+**Step 7: Run Prisma Migrations (If Schema Changed)**
+
+```bash
+# If Prisma schema differs from backup, sync it
+docker compose exec backend npx prisma migrate deploy
+
+# Or generate Prisma Client
+docker compose exec backend npx prisma generate
+```
+
+**Step 8: Restart Application**
+
+```bash
+# Restart backend to reconnect with migrated data
+docker compose restart backend
+
+# Check logs for errors
+docker compose logs -f backend
+```
+
+**Step 9: Test Application**
+
+- Open browser and verify:
+  - Users can log in with existing credentials
+  - Campgrounds display correctly with images
+  - Reviews are visible
+  - Map locations render properly
+
+**Troubleshooting Migration Issues:**
+
+_"relation does not exist" errors:_
+
+```bash
+# Prisma table names are case-sensitive ("User" not "user")
+# Check if backup used different casing
+docker exec josepaulocamp-db psql -U yelpcamp -d yelpcamp -c "\dt"
+
+# If tables are lowercase, might need to adjust Prisma schema or backup
+```
+
+_Foreign key constraint violations:_
+
+```bash
+# Disable foreign key checks during import (PostgreSQL doesn't support this directly)
+# Instead, import in specific order or use --disable-triggers
+
+docker exec josepaulocamp-db psql -U yelpcamp -d yelpcamp -c "
+SET session_replication_role = replica;
+-- Then run import
+SET session_replication_role = DEFAULT;
+"
+```
+
+_"password authentication failed" errors:_
+
+```bash
+# Verify Docker PostgreSQL credentials match
+docker compose exec postgres psql -U yelpcamp -d yelpcamp -c "SELECT current_user, current_database();"
+
+# Check .env file has correct DATABASE_URL
+docker compose exec backend env | grep DATABASE_URL
+```
+
+_Backup file too large:_
+
+```bash
+# Compress backup before copying
+gzip backup.sql
+docker cp backup.sql.gz josepaulocamp-db:/tmp/
+docker exec josepaulocamp-db gunzip /tmp/backup.sql.gz
+```
+
+---
+
+**Current Project Choice: Fresh Start**
+
+This project uses Docker with an isolated PostgreSQL instance. Benefits:
+
+- ✅ Complete environment reproducibility
+- ✅ No external dependencies
+- ✅ Easy to reset and rebuild
+- ✅ Perfect for learning and development
+- ✅ Data persists across container restarts via Docker volumes
+
+**Data Persistence:**
+
+- Database files stored in Docker volume: `josepaulocamp_postgres_data`
+- Sessions persist across container restarts (connect-pg-simple stores in PostgreSQL)
+- To completely reset: `docker compose down -v` (deletes volumes)
+- To preserve data: `docker compose stop` / `docker compose start`
+
 ---
 
 **Commit:** chore: set up PostgreSQL and Prisma ORM
