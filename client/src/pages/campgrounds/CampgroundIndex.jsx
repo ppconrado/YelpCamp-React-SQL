@@ -99,13 +99,13 @@ const CampgroundIndex = () => {
           <div style="min-width: 200px;">
             <h5 style="margin-bottom: 0.5rem;">${campground.title}</h5>
             <p style="margin-bottom: 0.5rem; color: #666;">${campground.location}</p>
-            <a href="/campgrounds/${campground._id}" style="color: #0d6efd; text-decoration: none; font-weight: 500;">
+            <a href="/campgrounds/${campground.id}" style="color: #0d6efd; text-decoration: none; font-weight: 500;">
               View Campground →
             </a>
           </div>
         `,
           title: campground.title,
-          id: campground._id,
+          id: campground.id,
         },
       })),
     }),
@@ -233,7 +233,7 @@ const CampgroundIndex = () => {
                   <p className="card-text">
                     {(() => {
                       const ts = deriveTimestampFromId(
-                        campground._id,
+                        campground.id,
                         campground.createdAt
                       );
                       return ts ? (
@@ -247,7 +247,7 @@ const CampgroundIndex = () => {
                     })()}
                   </p>
                   <Link
-                    to={`/campgrounds/${campground._id}?from=${pageFromUrl}`}
+                    to={`/campgrounds/${campground.id}?from=${pageFromUrl}`}
                     className="stretched-link"
                     aria-label={`Ver ${campground.title}`}
                   />

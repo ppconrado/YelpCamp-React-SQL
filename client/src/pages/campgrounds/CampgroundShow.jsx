@@ -47,7 +47,7 @@ const CampgroundShow = () => {
       showFlash(response.message, 'success');
       setCampground((prev) => ({
         ...prev,
-        reviews: prev.reviews.filter((review) => review._id !== reviewToDelete),
+        reviews: prev.reviews.filter((review) => review.id !== reviewToDelete),
       }));
     } catch {
       showFlash('Erro ao remover review.', 'error');
@@ -110,9 +110,7 @@ const CampgroundShow = () => {
   }
 
   const isAuthor =
-    currentUser &&
-    campground.author &&
-    campground.author._id === currentUser._id;
+    currentUser && campground.author && campground.author.id === currentUser.id;
 
   // Criar GeoJSON para o mapa individual
   const geoJson = {
@@ -155,7 +153,7 @@ const CampgroundShow = () => {
             {campground.images && campground.images.length > 0 && (
               <ImageCarousel
                 images={campground.images}
-                id={`campCarousel-${campground._id}`}
+                id={`campCarousel-${campground.id}`}
                 altPrefix={campground.title}
                 captionTitle={campground.title}
                 captionSubtitle={campground.location}
@@ -191,7 +189,7 @@ const CampgroundShow = () => {
               <div className="card-body d-flex gap-2">
                 <Link
                   className="btn btn-info"
-                  to={`/campgrounds/${campground._id}/edit`}
+                  to={`/campgrounds/${campground.id}/edit`}
                 >
                   Edit
                 </Link>
@@ -206,7 +204,7 @@ const CampgroundShow = () => {
             >
               {(() => {
                 const ts = deriveTimestampFromId(
-                  campground._id,
+                  campground.id,
                   campground.createdAt
                 );
                 return ts ? (
@@ -240,7 +238,7 @@ const CampgroundShow = () => {
           <h2 className="mb-4">Reviews</h2>
           {campground.reviews.map((review) => (
             <div
-              key={review._id}
+              key={review.id}
               className="card mb-4 shadow-sm"
               style={{ backgroundColor: '#fff' }}
             >
@@ -249,7 +247,7 @@ const CampgroundShow = () => {
                   By {review.author.username}{' '}
                   {(() => {
                     const ts = deriveTimestampFromId(
-                      review._id,
+                      review.id,
                       review.createdAt
                     );
                     return ts ? (
@@ -264,10 +262,10 @@ const CampgroundShow = () => {
                 </h6>
                 <p className="card-text">Rating: {review.rating}</p>
                 <p className="card-text text-secondary">{review.body}</p>
-                {currentUser && review.author._id === currentUser._id && (
+                {currentUser && review.author.id === currentUser.id && (
                   <button
                     className="btn btn-sm btn-danger"
-                    onClick={() => handleReviewDelete(review._id)}
+                    onClick={() => handleReviewDelete(review.id)}
                   >
                     Delete
                   </button>
@@ -281,7 +279,7 @@ const CampgroundShow = () => {
             <div className="card shadow-sm" style={{ backgroundColor: '#fff' }}>
               <div className="card-body">
                 <ReviewForm
-                  campgroundId={campground._id}
+                  campgroundId={campground.id}
                   onReviewAdded={handleReviewAdded}
                 />
               </div>

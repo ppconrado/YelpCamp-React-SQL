@@ -109,12 +109,12 @@ const CampgroundForm = ({ initialData = {}, isEdit = false }) => {
     try {
       let response;
       if (isEdit) {
-        response = await updateCampground(initialData._id, formData);
+        response = await updateCampground(initialData.id, formData);
       } else {
         response = await createCampground(formData);
       }
       showFlash(response.message, 'success');
-      navigate(`/campgrounds/${response.campground._id}`);
+      navigate(`/campgrounds/${response.campground.id}`);
     } catch (error) {
       const errorMessage =
         error.response?.data?.error || 'Erro ao salvar acampamento.';
