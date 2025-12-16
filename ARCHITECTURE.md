@@ -348,6 +348,80 @@ User requests protected resource
 
 ## Database Schema
 
+### Entity Relationship Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              DATABASE ENTITY RELATIONSHIPS                   │
+└─────────────────────────────────────────────────────────────┘
+
+            User
+             │
+             │ 1
+             │
+        ┌────┴────┐
+        │         │
+        │ N       │ N
+        │         │
+        ▼         ▼
+   Campground   Review
+        │         │
+        │ 1       │ N
+        │         │
+        │         │
+        │         └──────┐
+        │ N              │ 1
+        │                │
+        ▼                ▼
+      Image         Campground
+
+
+Relationship Summary:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. User → Campground    (1:N) - authorId FK
+2. User → Review        (1:N) - authorId FK
+3. Campground → Image   (1:N) - campgroundId FK
+4. Campground → Review  (1:N) - campgroundId FK
+5. User ↔ Campground    (M:N) - via Review table
+```
+
+### Relationship Details
+
+**User to Campground (One-to-Many)**
+
+- One user can create many campgrounds
+- Each campground has exactly one author
+- Foreign Key: `Campground.authorId → User.id`
+- On Delete: CASCADE (delete user → delete their campgrounds)
+
+**User to Review (One-to-Many)**
+
+- One user can write many reviews
+- Each review has exactly one author
+- Foreign Key: `Review.authorId → User.id`
+- On Delete: CASCADE (delete user → delete their reviews)
+
+**Campground to Image (One-to-Many)**
+
+- One campground can have many images (max 10 enforced in app logic)
+- Each image belongs to exactly one campground
+- Foreign Key: `Image.campgroundId → Campground.id`
+- On Delete: CASCADE (delete campground → delete its images)
+
+**Campground to Review (One-to-Many)**
+
+- One campground can have many reviews
+- Each review belongs to exactly one campground
+- Foreign Key: `Review.campgroundId → Campground.id`
+- On Delete: CASCADE (delete campground → delete its reviews)
+
+**User to Campground via Review (Many-to-Many)**
+
+- Users can review multiple campgrounds
+- Campgrounds can be reviewed by multiple users
+- Junction: Review table links users and campgrounds
+- Business Logic: One user can review same campground only once
+
 ### Prisma Schema (PostgreSQL)
 
 ```prisma

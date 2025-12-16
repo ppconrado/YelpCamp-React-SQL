@@ -199,9 +199,16 @@ npm run dev:full
 ├── package.json                # Backend dependencies
 │
 ├── prisma/                     # Prisma ORM
-│   ├── schema.prisma           # Database schema (models)
+│   ├── schema.prisma           # Database schema (models & relationships)
 │   └── migrations/             # Database migrations
-│
+
+📊 **Database Relationships:**
+- User → Campground (1:N) - authorId FK
+- User → Review (1:N) - authorId FK
+- Campground → Image (1:N) - campgroundId FK
+- Campground → Review (1:N) - campgroundId FK
+- User ↔ Campground (M:N) - via Review junction table
+
 ├── lib/                        # Shared libraries
 │   └── prisma.js               # Prisma Client singleton
 │
@@ -361,7 +368,8 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ## 📚 Documentation
 
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Comprehensive technical documentation with diagrams
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Comprehensive technical documentation with diagrams and database relationships
+- **[DB_CONVERSION_PLAN.md](./DB_CONVERSION_PLAN.md)** - Detailed entity-relationship documentation and schema design
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Step-by-step deployment guide
 - **[PRISMA_REFACTOR_PROGRESS.md](./PRISMA_REFACTOR_PROGRESS.md)** - MongoDB to PostgreSQL migration journey
 - **[MONGODB_TO_POSTGRESQL_GUIDE.md](./MONGODB_TO_POSTGRESQL_GUIDE.md)** - Complete conversion learning guide

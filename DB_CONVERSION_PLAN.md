@@ -6,11 +6,187 @@ This document outlines the step-by-step plan to migrate the current project from
 
 ---
 
-## 1. Analyze Current Data Models
+## 1. Current Data Models Analysis
 
-- Review all Mongoose schemas (User, Campground, Review).
-- Identify relationships (one-to-many, many-to-many, embedded documents).
-- Document the current structure and relationships.
+### 1.1 Entity Overview
+
+**User**
+
+- Primary entity for authentication and ownership
+- Stores credentials (email, username, password hash)
+- Owner of multiple campgrounds and reviews
+
+**Campground**
+
+- Core business entity representing camping locations
+- Contains descriptive information, pricing, location data
+- Owned by one user (author)
+- Contains multiple images and reviews
+- Stores geolocation data as JSON (GeoJSON Point format)
+
+**Review**
+
+- User feedback entity for campgrounds
+- Contains rating (1-5) and review text
+- Authored by one user
+- Belongs to one campground
+
+**Image**
+
+- Media storage entity for campground photos
+- Stores Cloudinary URLs and filenames
+- Belongs to one campground
+- Previously embedded in Campground, now normalized
+
+### 1.2 Relationship Mapping
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    RELATIONSHIP DIAGRAM                      │
+└─────────────────────────────────────────────────────────────┘
+
+       User (1)
+         │
+         ├──────────────────┐
+         │                  │
+         │ authorId         │ authorId
+         │ (Foreign Key)    │ (Foreign Key)
+         │                  │
+         ▼                  ▼
+    Campground (N)      Review (N)
+         │                  │
+         │ campgroundId     │ campgroundId
+         │ (Foreign Key)    │ (Foreign Key)
+         │                  │
+         ├──────────────────┘
+         │
+         │ campgroundId
+         │ (Foreign Key)
+         │
+         ▼
+     Image (N)
+```
+
+### 1.3 Relationship Types
+
+**One-to-Many Relationships:**
+
+1. **User → Campground** (One-to-Many)
+
+   - One user can create multiple campgrounds
+   - Each campground belongs to exactly one user (author)
+   - Field: `Campground.authorId` references `User.id`
+   - Cascade: Deleting user removes their campgrounds
+
+2. **User → Review** (One-to-Many)
+
+   - One user can write multiple reviews
+   - Each review belongs to exactly one user (author)
+   - Field: `Review.authorId` references `User.id`
+   - Cascade: Deleting user removes their reviews
+
+3. **Campground → Review** (One-to-Many)
+
+   - One campground can have multiple reviews
+   - Each review belongs to exactly one campground
+   - Field: `Review.campgroundId` references `Campground.id`
+   - Cascade: Deleting campground removes its reviews
+
+4. **Campground → Image** (One-to-Many)
+   - One campground can have multiple images (max 10)
+   - Each image belongs to exactly one campground
+   - Field: `Image.campgroundId` references `Campground.id`
+   - Cascade: Deleting campground removes its images
+
+**Indirect Relationships:**
+
+5. **User → Review → Campground** (Many-to-Many through Review)
+   - Users can review multiple campgrounds
+   - Campgrounds can be reviewed by multiple users
+   - Join table: Review (acts as junction table)
+   - Constraint: One user can only review a campground once (business logic)
+
+### 1.4 Data Structure Details
+
+**User Table:**
+
+```
+┌──────────┬──────────┬────────────┬────────┐
+│ Column   │ Type     │ Constraint │ Index  │
+├──────────┼──────────┼────────────┼────────┤
+│ id       │ Integer  │ PK, Auto   │ ✓      │
+│ email    │ String   │ UNIQUE     │ ✓      │
+│ username │ String   │ UNIQUE     │ ✓      │
+│ password │ String   │ NOT NULL   │        │
+└──────────┴──────────┴────────────┴────────┘
+```
+
+**Campground Table:**
+
+```
+┌─────────────┬──────────┬────────────┬────────┐
+│ Column      │ Type     │ Constraint │ Index  │
+├─────────────┼──────────┼────────────┼────────┤
+│ id          │ Integer  │ PK, Auto   │ ✓      │
+│ title       │ String   │ NOT NULL   │        │
+│ description │ String   │ NOT NULL   │        │
+│ price       │ Float    │ NOT NULL   │        │
+│ location    │ String   │ NOT NULL   │        │
+│ geometry    │ JSON     │ NOT NULL   │        │
+│ authorId    │ Integer  │ FK → User  │ ✓      │
+│ createdAt   │ DateTime │ DEFAULT    │        │
+│ updatedAt   │ DateTime │ AUTO       │        │
+└─────────────┴──────────┴────────────┴────────┘
+```
+
+**Review Table:**
+
+```
+┌──────────────┬──────────┬─────────────────┬────────┐
+│ Column       │ Type     │ Constraint      │ Index  │
+├──────────────┼──────────┼─────────────────┼────────┤
+│ id           │ Integer  │ PK, Auto        │ ✓      │
+│ body         │ String   │ NOT NULL        │        │
+│ rating       │ Integer  │ NOT NULL (1-5)  │        │
+│ authorId     │ Integer  │ FK → User       │ ✓      │
+│ campgroundId │ Integer  │ FK → Campground │ ✓      │
+│ createdAt    │ DateTime │ DEFAULT         │        │
+│ updatedAt    │ DateTime │ AUTO            │        │
+└──────────────┴──────────┴─────────────────┴────────┘
+```
+
+**Image Table:**
+
+```
+┌──────────────┬──────────┬─────────────────┬────────┐
+│ Column       │ Type     │ Constraint      │ Index  │
+├──────────────┼──────────┼─────────────────┼────────┤
+│ id           │ Integer  │ PK, Auto        │ ✓      │
+│ url          │ String   │ NOT NULL        │        │
+│ filename     │ String   │ NOT NULL        │        │
+│ campgroundId │ Integer  │ FK → Campground │ ✓      │
+└──────────────┴──────────┴─────────────────┴────────┘
+```
+
+### 1.5 Key Differences from MongoDB
+
+**From Embedded to Normalized:**
+
+- **MongoDB**: Images were embedded array in Campground document
+- **PostgreSQL**: Images are separate table with foreign key relationship
+- **Benefit**: Better data integrity, easier to manage individual images
+
+**From ObjectId to Integer:**
+
+- **MongoDB**: Used 12-byte ObjectId (e.g., `507f1f77bcf86cd799439011`)
+- **PostgreSQL**: Uses auto-incrementing integers (1, 2, 3...)
+- **Benefit**: Simpler, more efficient for joins and indexes
+
+**From Document References to Foreign Keys:**
+
+- **MongoDB**: Manual population required, weak referential integrity
+- **PostgreSQL**: Enforced foreign key constraints with CASCADE
+- **Benefit**: Database-level data integrity, automatic cleanup
 
 ## 2. Choose and Set Up Relational Database
 
