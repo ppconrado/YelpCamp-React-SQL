@@ -12,9 +12,11 @@ async function createReview(req, res) {
       .status(404)
       .json({ error: 'Não foi possível encontrar este acampamento!' });
   }
+  const { rating, ...reviewData } = req.body.review;
   const review = await prisma.review.create({
     data: {
-      ...req.body.review,
+      ...reviewData,
+      rating: parseInt(rating),
       campgroundId: Number(id),
       authorId: req.user.id,
     },

@@ -340,11 +340,9 @@ function gracefulShutdown() {
 
   server.close(() => {
     console.log('✅ Servidor HTTP encerrado');
-
-    mongoose.connection.close(false, () => {
-      console.log('✅ Conexão MongoDB encerrada');
-      process.exit(0);
-    });
+    // MongoDB connection removed - using PostgreSQL with Prisma
+    console.log('✅ Conexões encerradas');
+    process.exit(0);
   });
 
   // Força o encerramento após 10 segundos se não conseguir fechar gracefully

@@ -1,13 +1,9 @@
 const { campgroundSchema, reviewSchema } = require('./schemas.js'); // joi
 const ExpressError = require('./utils/ExpressError');
-const Campground = require('./models/campground');
-const Review = require('./models/review');
+// Mongoose models removed - using Prisma with PostgreSQL
 
 // MIDDLEWARE - AUTENTICACAO DO USUARIO
 module.exports.isLoggedIn = (req, res, next) => {
-  console.log('isLoggedIn check - sessionID:', req.sessionID);
-  console.log('isLoggedIn check - userId:', req.session.userId);
-  console.log('isLoggedIn check - user:', req.user);
   // Check if user is in session
   if (!req.session.userId) {
     return res.status(401).json({ error: 'Você precisa estar logado!' });
@@ -30,10 +26,14 @@ module.exports.validateCampground = (req, res, next) => {
 
 // MIDDLEWARE - PERMISSAO PARA O AUTOR DO ACAMPAMNETO EDITAR
 module.exports.isAuthor = async (req, res, next) => {
+  const { PrismaClient } = require('./generated/prisma');
+  const prisma = new PrismaClient();
   const { id } = req.params;
-  const campground = await Campground.findById(id);
-  if (!campground.author.equals(req.user._id)) {
-    // Retorna JSON em vez de redirecionar
+  const campground = await prisma.campground.findUnique({
+    where: { id: Number(id) },
+    select: { authorId: true },
+  });
+  if (!campground || campground.authorId !== req.user.id) {
     return res
       .status(403)
       .json({ error: 'Você não tem permissão para fazer isto!' });
@@ -43,10 +43,14 @@ module.exports.isAuthor = async (req, res, next) => {
 
 // MIDDLEWARE - PERMISSAO PARA O AUTOR DAS AVALIACOES EDITAR
 module.exports.isReviewAuthor = async (req, res, next) => {
+  const { PrismaClient } = require('./generated/prisma');
+  const prisma = new PrismaClient();
   const { id, reviewId } = req.params;
-  const review = await Review.findById(reviewId);
-  if (!review.author.equals(req.user._id)) {
-    // Retorna JSON em vez de redirecionar
+  const review = await prisma.review.findUnique({
+    where: { id: Number(reviewId) },
+    select: { authorId: true },
+  });
+  if (!review || review.authorId !== req.user.id) {
     return res
       .status(403)
       .json({ error: 'Você não tem permissão para fazer isto!' });
