@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: josepaulocamp-db-prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # Backend (Express API)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: josepaulocamp-backend-prod
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      SECRET: ${SECRET}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_KEY: ${CLOUDINARY_KEY}
+      CLOUDINARY_SECRET: ${CLOUDINARY_SECRET}
+      MAPBOX_TOKEN: ${MAPBOX_TOKEN}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+    command: sh -c "npx prisma migrate deploy && node app.js"
+    networks:
+      - app-network
+
+  # Frontend (React + Vite)
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: production
+    container_name: josepaulocamp-frontend-prod
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - '80:80'
+    networks:
+      - app-network
+
+  # Nginx Reverse Proxy (Optional - for SSL/Load Balancing)
+  nginx:
+    image: nginx:alpine
+    container_name: josepaulocamp-nginx
+    restart: always
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

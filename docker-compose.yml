@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: josepaulocamp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-yelpcamp}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-yelpcamp_dev_password}
+      POSTGRES_DB: ${DB_NAME:-yelpcamp}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-yelpcamp}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend (Express API)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: josepaulocamp-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://${DB_USER:-yelpcamp}:${DB_PASSWORD:-yelpcamp_dev_password}@postgres:5432/${DB_NAME:-yelpcamp}
+      SECRET: ${SECRET:-dev_secret_change_in_production}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_KEY: ${CLOUDINARY_KEY}
+      CLOUDINARY_SECRET: ${CLOUDINARY_SECRET}
+      MAPBOX_TOKEN: ${MAPBOX_TOKEN}
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/generated
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run dev"
+
+  # Frontend (React + Vite)
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: development
+    container_name: josepaulocamp-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:3000
+      VITE_MAPBOX_TOKEN: ${MAPBOX_TOKEN}
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: josepaulocamp-network
