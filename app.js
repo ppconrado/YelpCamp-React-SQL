@@ -68,7 +68,7 @@ if (process.env.NODE_ENV === 'production') {
 // RATE LIMITING - Protege contra abuso de API
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // limite de 100 requisições por IP
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // Dev: 1000 req, Prod: 100 req
   message: {
     error: 'Muitas requisições deste IP, tente novamente em 15 minutos.',
   },
@@ -76,7 +76,7 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, // apenas 5 tentativas de login/registro por 15min
+  max: process.env.NODE_ENV === 'production' ? 5 : 20, // Dev: 20 tentativas, Prod: 5
   message: {
     error: 'Muitas tentativas de autenticação, tente novamente em 15 minutos.',
   },
