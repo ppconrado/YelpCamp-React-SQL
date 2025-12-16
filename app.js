@@ -15,7 +15,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const { version, name } = require('./package.json');
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose'); // REMOVIDO: Usando Prisma com PostgreSQL
 // const ejsMate = require("ejs-mate"); // REMOVIDO: Não usaremos mais EJS
 const session = require('express-session');
 const flash = require('connect-flash'); // banner de mensagens
@@ -25,7 +25,7 @@ const methodOverride = require('method-override');
 // USER AUTHENTICATION
 const passport = require('passport');
 const LocalStrategy = require('passport-local'); // username e password - auth
-const User = require('./models/user');
+// const User = require('./models/user'); // REMOVIDO: Usando Prisma com PostgreSQL
 //
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -36,26 +36,20 @@ const reviewRoutes = require('./routes/reviews');
 const adminRoutes = require('./routes/admin');
 
 // CONEXAO PARA SALVAR UMA EXPRESS SESSION NO MongoDB (MERN)
-const MongoDBStore = require('connect-mongo')(session);
+// const MongoDBStore = require('connect-mongo')(session); // REMOVIDO: Usando PostgreSQL
 
 // BANCO DE DADOS (dev e prod)
-const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+// const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp'; // REMOVIDO: Usando PostgreSQL
 
 // CONECTANDO MONGOOSE
-mongoose.connect(dbUrl, {
-  // Connect Mongoose e OPTIONS
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false,
-});
+// mongoose.connect(dbUrl); // REMOVIDO: Usando Prisma com PostgreSQL
 
 // logica de confirmacao da conexao com o DB.
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'erro de conexao:'));
-db.once('open', () => {
-  console.log('Banco de Dados conectado');
-});
+// const db = mongoose.connection; // REMOVIDO: Usando Prisma com PostgreSQL
+// db.on('error', console.error.bind(console, 'erro de conexao:'));
+// db.once('open', () => {
+//   console.log('Banco de Dados conectado');
+// });
 
 // EXPRESS
 const app = express();
@@ -129,19 +123,19 @@ app.use(
 const secret =
   process.env.SECRET || 'Cuidado com a exposicao da senha de acesso!';
 // MONGODB EXPRESS SESSION
-const store = new MongoDBStore({
-  url: dbUrl,
-  secret, // cookie
-  touchAfter: 24 * 60 * 60, // lazy store
-});
+// const store = new MongoDBStore({ // REMOVIDO: Usando PostgreSQL
+//   url: dbUrl,
+//   secret, // cookie
+//   touchAfter: 24 * 60 * 60, // lazy store
+// });
 
 // MONGO EXPRESS SESSION - CONFIGURACAO
-store.on('error', function (e) {
-  console.log('ERRO NO ARMAZENAMENTO DA SESSION no DB', e);
-});
+// store.on('error', function (e) {
+//   console.log('ERRO NO ARMAZENAMENTO DA SESSION no DB', e);
+// });
 
 const sessionConfig = {
-  store,
+  // store, // REMOVIDO: Usando sessão em memória temporariamente
   name: 'yelpcamp.sid', // Nome mais específico para o cookie
   secret,
   resave: false,
@@ -214,9 +208,9 @@ app.use(
 // PASSPORT CONFIGURATION - Autenticacao do usuario
 app.use(passport.initialize());
 app.use(passport.session()); // express session
-passport.use(new LocalStrategy(User.authenticate())); // mongoose local strategy(nome e senha)
-passport.serializeUser(User.serializeUser()); // mongoose - storage a session
-passport.deserializeUser(User.deserializeUser()); // mongoose - unstorage session
+// passport.use(new LocalStrategy(User.authenticate())); // REMOVIDO: Mongoose local strategy - implementar com Prisma
+// passport.serializeUser(User.serializeUser()); // REMOVIDO: mongoose - storage a session
+// passport.deserializeUser(User.deserializeUser()); // REMOVIDO: mongoose - unstorage session
 
 // FLASH Message Service ->  partials/flash.ejs - AVISOS
 app.use((req, res, next) => {

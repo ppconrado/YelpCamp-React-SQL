@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require('../generated/prisma');
 const bcrypt = require('bcrypt');
 
 const prisma = new PrismaClient();
@@ -59,11 +59,12 @@ async function login(req, res) {
 }
 
 function logout(req, res) {
-  module.exports = {
-    register,
-    login,
-    logout,
-  };
   // TODO: Implement session destroy logic if needed
   res.json({ message: 'Até a próxima aventura!' });
 }
+
+module.exports = {
+  register,
+  login,
+  logout,
+};

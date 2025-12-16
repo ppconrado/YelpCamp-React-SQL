@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 const { cloudinary } = require('../cloudinary/index.js');
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
@@ -127,14 +127,15 @@ async function updateCampground(req, res) {
 
 // Delete campground
 async function deleteCampground(req, res) {
-  module.exports = {
-    index,
-    createCampground,
-    showCampground,
-    updateCampground,
-    deleteCampground,
-  };
   const { id } = req.params;
   await prisma.campground.delete({ where: { id: Number(id) } });
   res.json({ message: 'O acampamento foi removido com sucesso!' });
 }
+
+module.exports = {
+  index,
+  createCampground,
+  showCampground,
+  updateCampground,
+  deleteCampground,
+};
