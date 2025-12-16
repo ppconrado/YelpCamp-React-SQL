@@ -17,7 +17,7 @@ const CampgroundEdit = () => {
       try {
         const data = await getCampground(id);
         setCampground(data);
-      } catch {
+      } catch (error) {
         showFlash(
           'Não foi possível encontrar este acampamento para edição!',
           'error'

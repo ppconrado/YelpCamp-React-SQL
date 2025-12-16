@@ -166,8 +166,8 @@ const CampgroundForm = ({ initialData = {}, isEdit = false }) => {
               <strong>📍 Selected:</strong> {locationData.placeName}
               <br />
               <span className="text-muted">
-                Coordinates: {locationData.coordinates[1].toFixed(6)},{' '}
-                {locationData.coordinates[0].toFixed(6)}
+                Coordinates: {Number(locationData.coordinates[1]).toFixed(6)},{' '}
+                {Number(locationData.coordinates[0]).toFixed(6)}
                 {locationData.placeType && ` • Type: ${locationData.placeType}`}
               </span>
             </small>
