@@ -190,7 +190,88 @@ npm run dev:full
 
 ---
 
-## 📁 Project Structure
+## � Docker Quick Start
+
+If you prefer using Docker for containerized development:
+
+### Prerequisites
+
+- Docker Desktop installed and running
+- Docker Compose v2.0+
+
+### Launch Application
+
+```bash
+# Start all containers (PostgreSQL, Backend, Frontend)
+docker compose up
+
+# Start in detached mode (background)
+docker compose up -d
+
+# Rebuild and start (after code changes)
+docker compose up --build
+```
+
+### Stop Application
+
+```bash
+# Stop all containers (keeps data)
+docker compose down
+
+# Stop and remove volumes (⚠️ deletes database data)
+docker compose down -v
+
+# Stop containers without removing them
+docker compose stop
+```
+
+### Manage Containers
+
+```bash
+# View running containers
+docker compose ps
+
+# View logs
+docker compose logs -f
+
+# View logs for specific service
+docker compose logs -f backend
+docker compose logs -f frontend --tail=50
+
+# Restart specific service
+docker compose restart backend
+
+# Access backend shell
+docker compose exec backend sh
+
+# Access database
+docker compose exec postgres psql -U yelpcamp -d yelpcamp
+
+# Open Prisma Studio (Database GUI)
+docker compose exec backend npx prisma studio
+```
+
+### Access URLs (Docker)
+
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:3000/api
+- **Health Check**: http://localhost:3000/api/health
+- **Prisma Studio**: http://localhost:5555
+
+### Docker Development Workflow
+
+1. **Start containers**: `docker compose up -d`
+2. **Make code changes**:
+   - Frontend: Hot-reload automatic ✅
+   - Backend: Restart with `docker compose restart backend`
+3. **View logs**: `docker compose logs -f backend`
+4. **Stop**: `docker compose down`
+
+See [DOCKER.md](./DOCKER.md) for comprehensive Docker documentation.
+
+---
+
+## �📁 Project Structure
 
 ```
 ├── app.js                      # Express application entry
