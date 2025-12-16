@@ -93,6 +93,52 @@ JosePauloCamp is a full-featured campground review application where users can d
 - **Helmet** - Security headers
 - **CORS** - Cross-origin configuration
 
+#### 🔐 Session Management Architecture
+
+**Both `express-session` and `connect-pg-simple` work together:**
+
+- **`express-session`** (Core middleware):
+
+  - Handles session lifecycle (create, read, update, destroy)
+  - Manages session cookies
+  - Provides `req.session` object
+  - Handles cookie signing and encryption
+
+- **`connect-pg-simple`** (Storage adapter):
+  - Tells `express-session` WHERE to save session data (PostgreSQL)
+  - Creates and manages the `session` table automatically
+  - Handles read/write operations to database
+  - Replaces the default memory store
+
+**How they work together:**
+
+```javascript
+const session = require('express-session'); // Core session middleware
+const pgSession = require('connect-pg-simple')(session); // Pass session to pgSession
+
+const store = new pgSession({
+  // Create PostgreSQL store
+  pool: pgPool,
+  tableName: 'session',
+  createTableIfMissing: true, // Auto-creates session table
+});
+
+app.use(
+  session({
+    // Use express-session with store
+    store: store, // Connect the PostgreSQL store
+    secret: process.env.SECRET,
+    // ... other options
+  })
+);
+```
+
+**Analogy**: Think of `express-session` as the engine and `connect-pg-simple` as the fuel tank. You need both - the engine does the work, the tank stores the fuel (session data).
+
+- ❌ Without `express-session`: No session functionality at all
+- ❌ Without `connect-pg-simple`: Sessions work but stored in memory (lost on restart)
+- ✅ Together: Persistent sessions that survive container restarts
+
 ### Services & Infrastructure
 
 - **PostgreSQL** - Database (Neon/Supabase/Railway/Local)
