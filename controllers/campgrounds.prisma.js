@@ -51,9 +51,11 @@ async function createCampground(req, res) {
     }
   }
   const images = req.files.map((f) => ({ url: f.path, filename: f.filename }));
+  const { price, ...campgroundData } = req.body.campground;
   const campground = await prisma.campground.create({
     data: {
-      ...req.body.campground,
+      ...campgroundData,
+      price: parseFloat(price),
       geometry,
       images: { create: images },
       authorId: req.user.id,
@@ -99,10 +101,12 @@ async function updateCampground(req, res) {
       geometry = geoData.body.features[0].geometry;
     }
   }
+  const { price, ...campgroundData } = req.body.campground;
   const campground = await prisma.campground.update({
     where: { id: Number(id) },
     data: {
-      ...req.body.campground,
+      ...campgroundData,
+      price: parseFloat(price),
       geometry,
       images: { create: imgs },
     },

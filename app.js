@@ -93,7 +93,12 @@ const allowedOrigins = [
   'http://localhost:5177',
   'http://localhost:5178',
   'http://localhost:5179',
-  'http://localhost:5180', // Vite pode usar qualquer porta disponível
+  'http://localhost:5180',
+  'http://localhost:5181',
+  'http://localhost:5182',
+  'http://localhost:5183',
+  'http://localhost:5184',
+  'http://localhost:5185', // Vite pode usar qualquer porta disponível
   process.env.FRONTEND_URL, // Produção (Vercel)
 ].filter(Boolean); // Remove undefined se FRONTEND_URL não estiver definida
 
@@ -162,6 +167,30 @@ const sessionConfig = {
 app.use(session(sessionConfig));
 // FLASH MESSAGES - AVISOS
 app.use(flash());
+
+// Middleware to load user from session (replaces Passport deserialization)
+app.use(async (req, res, next) => {
+  console.log('Session middleware - sessionID:', req.sessionID);
+  console.log('Session middleware - userId:', req.session.userId);
+  if (req.session.userId) {
+    try {
+      const { PrismaClient } = require('./generated/prisma');
+      const prisma = new PrismaClient();
+      const user = await prisma.user.findUnique({
+        where: { id: req.session.userId },
+        select: { id: true, username: true, email: true },
+      });
+      if (user) {
+        req.user = user;
+        console.log('User loaded from session:', user.username);
+      }
+    } catch (err) {
+      console.error('Error loading user from session:', err);
+    }
+  }
+  next();
+});
+
 // HELMET - protege ao acesso de dados das requisicoes
 app.use(helmet());
 

@@ -37,8 +37,21 @@ async function register(req, res, next) {
     const user = await prisma.user.create({
       data: { email, username, password: hash },
     });
-    // TODO: Implement session logic if needed
-    res.status(201).json({ user, message: 'Bem Vindo ao Jose Paulo Camp!' });
+    // Set user in session
+    req.session.userId = user.id;
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Erro ao salvar sessão' });
+      }
+      const userResponse = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+      };
+      res
+        .status(201)
+        .json({ user: userResponse, message: 'Bem Vindo ao Jose Paulo Camp!' });
+    });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -54,13 +67,32 @@ async function login(req, res) {
   if (!valid) {
     return res.status(401).json({ error: 'Senha incorreta.' });
   }
-  // TODO: Implement session logic if needed
-  res.json({ user, message: 'Bem vindo! Estamos felizes com seu retorno!' });
+  // Set user in session
+  req.session.userId = user.id;
+  req.session.save((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao salvar sessão' });
+    }
+    const userResponse = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+    };
+    res.json({
+      user: userResponse,
+      message: 'Bem vindo! Estamos felizes com seu retorno!',
+    });
+  });
 }
 
 function logout(req, res) {
-  // TODO: Implement session destroy logic if needed
-  res.json({ message: 'Até a próxima aventura!' });
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao fazer logout' });
+    }
+    res.clearCookie('yelpcamp.sid');
+    res.json({ message: 'Até a próxima aventura!' });
+  });
 }
 
 module.exports = {
