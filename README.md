@@ -5,7 +5,7 @@
 [![Live Demo](https://img.shields.io/badge/demo-live-success)](https://josepaulocamp.vercel.app)
 [![GitHub](https://img.shields.io/badge/github-source-blue)](https://github.com/ppconrado/YelpCamp-React)
 
-[View Live Application](https://josepaulocamp.vercel.app) | [Technical Documentation](./ARCHITECTURE.md) | [Deployment Guide](./DEPLOYMENT.md)
+[View Live Application](https://josepaulocamp.vercel.app) | [Technical Documentation](./ARCHITECTURE.md) | [Cloud Deployment](./DEPLOYMENT.md) | [Docker Deployment](./DEPLOYMENT_DOCKER.md)
 
 ---
 
@@ -485,7 +485,22 @@ The application is configured for deployment on free-tier cloud services:
 - **Database**: PostgreSQL (Neon/Supabase/Railway - free tiers available)
 - **Images**: Cloudinary (free tier, 25GB storage)
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+### Deployment Options
+
+Choose the deployment strategy that fits your needs:
+
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Cloud services deployment (Vercel + Render + Cloud PostgreSQL)
+
+  - ✅ Easiest setup (15-30 minutes)
+  - ✅ Free tier available
+  - ✅ Auto-deploy from GitHub
+  - ✅ Best for production apps
+
+- **[DEPLOYMENT_DOCKER.md](./DEPLOYMENT_DOCKER.md)** - Docker deployment on VPS
+  - ✅ Full infrastructure control
+  - ✅ Single server ($6-12/mo)
+  - ✅ Best for learning DevOps
+  - ✅ Self-hosting option
 
 ### Production URLs
 
@@ -496,9 +511,18 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ## 📚 Documentation
 
+### Technical Guides
+
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Comprehensive technical documentation with diagrams and database relationships
 - **[DB_CONVERSION_PLAN.md](./DB_CONVERSION_PLAN.md)** - Detailed entity-relationship documentation and schema design
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Step-by-step deployment guide
+
+### Deployment
+
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Cloud services deployment (Vercel + Render + Cloud PostgreSQL) - **Recommended for production**
+- **[DEPLOYMENT_DOCKER.md](./DEPLOYMENT_DOCKER.md)** - Docker deployment on single VPS - **Best for learning & self-hosting**
+
+### Migration & Development
+
 - **[PRISMA_REFACTOR_PROGRESS.md](./PRISMA_REFACTOR_PROGRESS.md)** - MongoDB to PostgreSQL migration journey
 - **[MONGODB_TO_POSTGRESQL_GUIDE.md](./MONGODB_TO_POSTGRESQL_GUIDE.md)** - Complete conversion learning guide
 - **[BACKEND_IMPROVEMENTS.md](./BACKEND_IMPROVEMENTS.md)** - Backend optimization details
@@ -681,7 +705,7 @@ MIT License - feel free to use this project for learning or your own application
 If you have questions or run into issues:
 
 1. Check the [ARCHITECTURE.md](./ARCHITECTURE.md) for technical details
-2. Review [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment help
+2. Review deployment guides: [Cloud Services](./DEPLOYMENT.md) or [Docker](./DEPLOYMENT_DOCKER.md)
 3. Search existing [GitHub Issues](https://github.com/ppconrado/YelpCamp-React/issues)
 4. Open a new issue with details about your problem
 
